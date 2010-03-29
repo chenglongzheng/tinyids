@@ -26,14 +26,14 @@ class LoggerError(Exception):
     pass
 
 
-def init_std_stream_loggers():
+def init_std_stream_loggers(level='info'):
     logger = logging.getLogger('main')
     logger.setLevel(logging.DEBUG)  # Main logger's level is always DEBUG
     
     # Add the stream handler
     
     stderr_handler = logging.StreamHandler(sys.stderr)
-    stderr_handler.setLevel(logging.DEBUG)
+    stderr_handler.setLevel(DEFAULT_LOGLEVELS[level])
     stderr_handler.setFormatter(FORMATTER_DETAIL)
     logger.addHandler(stderr_handler)
     logger.debug('Standard stream loggers initialized successfully')
