@@ -1,0 +1,12 @@
+include AUTHORS
+include BUGS
+include ChangeLog
+include INSTALL
+include LICENSE
+include MANIFEST.in
+include NOTICE
+include README
+include setup.cfg
+include setup.py
+include scripts/tinyids
+recursive-include TinyIDS *.py
