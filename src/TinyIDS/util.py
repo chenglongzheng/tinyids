@@ -1,11 +1,10 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  This file is part of tinyids.
+#  This file is part of <Project>
 #
-#  tinyids - 
+#  <Description>
 #
-#  Project: https://www.codetrax.org/projects/tinyids
+#  <Project URL>
 #
 #  Copyright 2010 George Notaras <gnot [at] g-loaded.eu>, CodeTRAX.org
 #
@@ -22,13 +21,17 @@
 #  limitations under the License.
 #
 
-# The following makes it possible to run the script from
-# the current location during development.
-#import sys
-#sys.path = ['../src/'] + sys.path
+try:
+    import hashlib
+    sha1 = hashlib.sha1
+except ImportError:
+    import sha
+    sha1 = sha.new
 
-from TinyIDS.main import server_main
 
+def sha1sum(data):
+    """Returns the sha1 checksum of the provided data."""
+    s = sha1()
+    s.update(data)
+    return s.hexdigest()
 
-if __name__ == '__main__':
-	server_main()
