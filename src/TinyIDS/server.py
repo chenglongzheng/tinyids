@@ -6,37 +6,30 @@ import logging
 from TinyIDS.database import ChecksumDatabase
 
 
-logging.basicConfig(
-    filename = os.path.abspath(os.path.join(os.path.dirname(__file__), 'tinyids.log')),
-    filemode = 'a',
-    level = logging.DEBUG,
-    format = '%(asctime)s %(levelname)s %(message)s',
-    datefmt = '%Y-%m-%d %H:%M:%S',
-)
-
-#logger = logging.getLogger()
-
-
-
-
-
+logger = logging.getLogger('main')
 
 
 class TinyIDSServer(SocketServer.ThreadingTCPServer):
     
     def _database_activate(self):
         self.db = ChecksumDatabase()
+        logger.debug('checksum database initialized')
     
     def _database_close(self):
         self.db.close()
+        logger.debug('checksum database closed')
     
     def server_activate(self):
+        logger.debug('server starting')
         self._database_activate()
         SocketServer.ThreadingTCPServer.server_activate(self)
+        logger.debug('server accepting connections')
     
     def server_close(self):
+        logger.debug('server shutting down')
         self._database_close()
         SocketServer.ThreadingTCPServer.server_close(self)
+        logger.debug('server terminated')
         
     def verify_request(self, request, client_address):
         """Should check the RSA KEY"""

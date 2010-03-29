@@ -22,6 +22,7 @@
 #
 
 from TinyIDS.config import cfg
+from TinyIDS.applogger import init_file_logger, init_std_stream_loggers
 from TinyIDS.server import TinyIDSServer, TinyIDSCommandHandler
 
 
@@ -29,6 +30,8 @@ def main():
     raise NotImplementedError
 
 def server_main():
+    init_std_stream_loggers()
+    #init_file_logger()
     interface = cfg.get('main', 'interface')
     port = cfg.getint('main', 'port')
     server = TinyIDSServer((interface, port), TinyIDSCommandHandler)

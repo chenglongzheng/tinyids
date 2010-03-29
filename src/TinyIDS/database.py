@@ -2,11 +2,15 @@
 import os
 import anydbm
 
+
+DEFAULT_DATABASE_PATH = 'tinyids.db'
+
 class ChecksumDatabase:
     
     def __init__(self, path=None):
         if not path:
-            path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'tinyids.db'))
+            path = DEFAULT_DATABASE_PATH
+        path = os.path.abspath(path)
         self.db = anydbm.open(path, 'c', 0600)
     
     def get(self, client_ip):
