@@ -21,6 +21,15 @@
 #  limitations under the License.
 #
 
-def main():
-	raise NotImplementedError
+from TinyIDS.config import cfg
+from TinyIDS.server import TinyIDSServer, TinyIDSCommandHandler
 
+
+def main():
+    raise NotImplementedError
+
+def server_main():
+    interface = cfg.get('main', 'interface')
+    port = cfg.getint('main', 'port')
+    server = TinyIDSServer((interface, port), TinyIDSCommandHandler)
+    server.serve_forever()
