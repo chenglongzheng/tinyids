@@ -27,7 +27,7 @@ name = 'tinyids'
 description = """TinyIDS is a ..."""
 long_description = """TinyIDS is a ..."""
 author = 'George Notaras'
-author_email = 'gnot [at] g-loaded.eu'
+author_email = 'gnot@g-loaded.eu'
 url = 'http://www.codetrax.org/projects/tinyids'
 download_url = "http://www.codetrax.org/downloads/projects/" + name + "/" + name + "-" + version + ".tar.gz"
 license = "Apache License version 2"
@@ -48,12 +48,17 @@ if status == 'stable':
 
 classifiers = [
 	devel_status,
+    'Environment :: No Input/Output (Daemon)',
 	'Environment :: Console',
+    'Intended Audience :: Information Technology',
 	'Intended Audience :: System Administrators',
 	'License :: OSI Approved :: Apache Software License',
 	'Natural Language :: English',
-	'Operating System :: OS Independent',
+	'Operating System :: POSIX',
 	'Programming Language :: Python',
+    'Topic :: Security',
+    'Topic :: System',
+    'Topic :: System :: Monitoring',
 	'Topic :: Utilities',
 	]
 

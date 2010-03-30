@@ -42,24 +42,37 @@
 #
 
 
+import sys
+sys.path = ['src/'] + sys.path
+
 from distutils.core import setup
-#from setuptools import setup
 from TinyIDS import info
 
 if __name__=='__main__':
-	setup(
-		name = info.name,
-		version = info.version,
-		description = info.description,
-		long_description = info.long_description,
-		author = info.author,
-		author_email = info.author_email,
-		url = info.url,
-		download_url = info.download_url,
-		license = info.license,
-		classifiers = info.classifiers,
-		packages = [
-				'TinyIDS',
-				],
-		scripts = ['scripts/tinyids']
-		)
+    setup(
+        name = info.name,
+        version = info.version,
+        description = info.description,
+        long_description = info.long_description,
+        author = info.author,
+        author_email = info.author_email,
+        url = info.url,
+        download_url = info.download_url,
+        license = info.license,
+        classifiers = info.classifiers,
+        packages = [
+            'TinyIDS',
+            'TinyIDS.backends',
+        ],
+        package_dir = {'': 'src'},
+        data_files = [
+            ('/etc/tinyids', [
+                'etc/tinyids.conf.default',
+                'etc/tinyidsd.conf.default',
+            ]),
+            ('/etc/tinyids/backends', [
+                'etc/backends/custom.py.example',
+            ]),
+        ],
+        scripts = ['scripts/tinyids', 'scripts/tinyidsd']
+        )

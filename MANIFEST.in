@@ -9,4 +9,8 @@ include README
 include setup.cfg
 include setup.py
 include scripts/tinyids
-recursive-include TinyIDS *.py
+include scripts/tinyidsd
+include etc/tinyids.conf.default
+include etc/tinyidsd.conf.default
+include etc/backends/custom.py.example
+recursive-include src/TinyIDS *.py
