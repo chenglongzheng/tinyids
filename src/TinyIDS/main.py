@@ -38,11 +38,11 @@ def main():
     else:
         applogger.init_std_stream_loggers()
     logger = logging.getLogger('main')
-    logger.debug('getting client configuration from %s' % opts.confpath)
+    logger.debug('Getting client configuration from %s' % opts.confpath)
     try:
         cfg = config.get_client_configuration(opts.confpath)
     except config.ConfigFileNotFoundError:
-        logger.critical('configuration file not found. exiting...')
+        logger.critical('Configuration file not found. exiting...')
         sys.exit(1)
     command = None
     if opts.test:
@@ -66,11 +66,11 @@ def server_main():
     else:
         applogger.init_file_logger()
     logger = logging.getLogger('main')
-    logger.debug('getting server configuration from %s' % opts.confpath)
+    logger.debug('Getting server configuration from %s' % opts.confpath)
     try:
         cfg = config.get_server_configuration(opts.confpath)
     except config.ConfigFileNotFoundError:
-        logger.critical('configuration file not found')
+        logger.critical('Configuration file not found')
         sys.exit(1)
     interface = cfg.get('main', 'interface')
     port = cfg.getint('main', 'port')

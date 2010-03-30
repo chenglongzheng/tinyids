@@ -22,6 +22,7 @@
 #
 
 import os
+import glob
 import socket
 import logging
 import getpass
@@ -103,39 +104,61 @@ class TinyIDSClient:
     def get_checksum(self):
         return self.hasher.hexdigest()
     
-    def _run_all_valid_checks(self, directory):
-        pass
-    
     def run_checks(self):
-        backends_dir = TinyIDS.backends.__path__[0]
-        #backends_glob_exp = os.path.join(backends_dir, '*.py')
-    #    plugins_dir = DEFAULT_PLUGINS_DIR
-        #plugins_glob_exp = os.path.join(plugins_dir, '*.py')
-        # Run internal backend tests first
-        for backend_fname in os.listdir(backends_dir):
-            if not backend_fname.endswith('.py'):
+        backends = []
+        core_backends_dir = TinyIDS.backends.__path__[0]
+        backends.extend(glob.glob(os.path.join(core_backends_dir, '*.py')))
+        extra_backends_dir = self.cfg.get('main', 'extra_backends_dir')
+        backends.extend(glob.glob(os.path.join(extra_backends_dir, '*.py')))
+        user_defined_tests = self.cfg.getlist('main', 'tests')
+        
+        # Holds the user-defined tests that have been run
+        user_defined_tests_run = []
+        
+        for backend_path in backends:
+            backend_name = os.path.basename(backend_path)[:-3]
+            backend_dir = os.path.dirname(backend_path)
+            if backend_name == '__init__':
                 continue
-            backend_name = backend_fname[:-3]
+            elif user_defined_tests:
+                if not backend_name in user_defined_tests:
+                    continue
             # Load backend
-            m = load_backend(backends_dir, backend_name)
+            m = load_backend(backend_dir, backend_name)
             if not hasattr(m, 'Check'):
+                logger.warning('skipping invalid backend: %s' % backend_path)
                 continue
-            print 'doing %s' % backend_name
+            logger.info('processing backend: %s' % backend_name)
             for data in m.Check().run():
                 self.hash_data(data)
+            
+            if user_defined_tests:
+                # If the user has set a list of tests, add the test that was
+                # run to the list that keeps track of which tests have been run
+                user_defined_tests_run.append(backend_name)
+        
+        if user_defined_tests:
+            invalid_user_defined_tests = []
+            for test in user_defined_tests:
+                if test not in user_defined_tests_run:
+                    invalid_user_defined_tests.append(test)
+            if invalid_user_defined_tests:
+                logger.warning('invalid user-defined tests: %s' % ', '.join(invalid_user_defined_tests))
     
-        print self.get_checksum()
-
     def run(self):
+        
+        enabled_servers = self.get_enabled_server_list()
+        if not enabled_servers:
+            logger.warning('no servers configured. shutting down...')
+            self.client_close()
+        
         # Decide which method to execute
         func = getattr(self, '_com_%s' % self.command)
+        
         # Tests are required to run only with the CHECK and UPDATE commands
         if self.command in ('CHECK', 'UPDATE'):
             self.run_checks()
-        enabled_servers = self.get_enabled_server_list()
-        if not enabled_servers:
-            logger.warning('no servers configured. aborting...')
-            return
+        
         for server in enabled_servers:
             # server is in 'server__<name>' format (a section name)
             # Here we set self.server_name to the canonical server name
@@ -159,7 +182,6 @@ class TinyIDSClient:
                 logger.error('connection error: "%s"' % e)
                 logger.warning('skipping server: %s' % self.server_name)
                 self._close_socket()
-                continue
         
         self.client_close()
     
@@ -170,8 +192,7 @@ class TinyIDSClient:
     
     def _check_command_status(self, response):
         if response.startswith('20'):
-            logger.debug('%s command was successful' % self.command)
-            print 'SUCCESS'
+            logger.debug('SUCCESS: command %s complete' % self.command)
         else:
             logger.warning('%s command failed with: %s' % (self.command, response))
     
@@ -199,12 +220,7 @@ class TinyIDSClient:
         """
         Syntax: UPDATE <hash> <passphrase>
         """
-        while True:
-            passphrase = self._get_passphrase('Passphrase')
-            passphrase_confirm = self._get_passphrase('Confirm passphrase')
-            if passphrase == passphrase_confirm:
-                break
-            logger.error('passphrases do not match. try again...')
+        passphrase = self._get_passphrase('Passphrase')
         data = '%s %s %s' % (self.command, self.get_checksum(), passphrase)
         self._communicate(host, port, public_key, data)
     

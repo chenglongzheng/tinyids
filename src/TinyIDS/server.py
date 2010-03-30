@@ -4,7 +4,7 @@ import SocketServer
 import logging
 
 from TinyIDS import database
-
+from TinyIDS import info
 
 logger = logging.getLogger('main')
 
@@ -13,38 +13,39 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
     
     def _database_activate(self):
         self.db = database.HashDatabase()
-        logger.debug('hash database initialized')
+        logger.debug('Hash database initialized')
     
     def _database_close(self):
         self.db.close()
-        logger.debug('hash database closed')
+        logger.debug('Hash database closed')
     
     def server_activate(self):
-        logger.debug('server starting')
+        logger.debug('TinyIDS Server v%s starting...' % info.version)
         self._database_activate()
         SocketServer.ThreadingTCPServer.server_activate(self)
-        logger.debug('server accepting connections')
+        logger.debug('Accepting connections on %s:%s' % self.server_address)
     
     def server_close(self):
-        logger.debug('server shutting down')
+        logger.debug('Server shutting down')
         self._database_close()
         SocketServer.ThreadingTCPServer.server_close(self)
-        logger.debug('server terminated')
+        logger.debug('Server terminated')
         
     def verify_request(self, request, client_address):
-        """Should check the RSA KEY"""
+        """TODO: IP-based access control."""
         return True
 
 
 
 class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     
-    
-    
     def __init__(self, request, client_address, server):
     
         self.max_data_len = 8192
         self.cmd_end = '\r\n'
+        
+        # Indicator of the command that is being processed
+        self.doing_command = None
         
         # command : (<processing_method>, <number_of_args>)
         self.com2func = {
@@ -90,13 +91,15 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     def _process_command(self, data):
         cmd_parts = data.split()
         command = cmd_parts[0].upper()
+        self.doing_command = command
         args = cmd_parts[1:]
         com_func = self.com2func[command][0]
         com_func(*args)
     
-    
+    def _finish_command(self):
+        self.doing_command = None
+        
     def _com_TEST(self):
-        logger.debug('client: %s tested connection' % repr(self.client_address))
         self._send_response(20) # OK
     
     def _com_CHECK(self, hash):
@@ -144,9 +147,16 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     
     def _send_response(self, code):
         msg, level = self.errcodes[code]
-        self.wfile.write(msg + self.cmd_end)
         
-        self.server.db.dbprint()
+        if code == 20:
+            logger.info('%s ran %s successfully' % (self.client_address[0], self.doing_command))
+        else:
+            logger.warning('%s failed with %s: %s' % (self.client_address[0], self.doing_command, msg))
+        
+        self.wfile.write(msg + self.cmd_end)
+        logger.debug('sent response to %s' % self.client_address[0])
+        
+        #self.server.db.dbprint()
     
    
     
@@ -155,6 +165,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
         data = self._get_data()
         if self._verify_grammar(data):
             self._process_command(data)
+            self._finish_command()
         else:
             self._send_response(41)
 
