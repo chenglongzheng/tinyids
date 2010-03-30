@@ -21,10 +21,14 @@
 #  limitations under the License.
 #
 
-from TinyIDS.config import cfg
+import sys
+import logging
+
 from TinyIDS import applogger
 from TinyIDS import cmdline
+from TinyIDS import config
 from TinyIDS.server import TinyIDSServer, TinyIDSCommandHandler
+from TinyIDS.client import TinyIDSClient
 
 
 def main():
@@ -33,6 +37,26 @@ def main():
         applogger.init_std_stream_loggers(level='debug')
     else:
         applogger.init_std_stream_loggers()
+    logger = logging.getLogger('main')
+    logger.debug('getting client configuration')
+    try:
+        cfg = config.get_client_configuration(opts.confpath)
+    except config.ConfigFileNotFoundError:
+        logger.critical('configuration file not found. exiting...')
+        sys.exit(1)
+    command = None
+    if opts.test:
+        command = 'TEST'
+    if opts.check:
+        command = 'CHECK'
+    elif opts.update:
+        command = 'UPDATE'
+    elif opts.delete:
+        command = 'DELETE'
+    elif opts.changephrase:
+        command = 'CHANGEPHRASE'
+    client = TinyIDSClient(command)
+    client.run()
 
 def server_main():
     opts = cmdline.parse_server()
@@ -40,7 +64,13 @@ def server_main():
         applogger.init_std_stream_loggers(level='debug')
     else:
         applogger.init_file_logger()
-    
+    logger = logging.getLogger('main')
+    logger.debug('getting server configuration')
+    try:
+        cfg = config.get_server_configuration(opts.confpath)
+    except config.ConfigFileNotFoundError:
+        logger.critical('configuration file not found')
+        sys.exit(1)
     interface = cfg.get('main', 'interface')
     port = cfg.getint('main', 'port')
     server = TinyIDSServer((interface, port), TinyIDSCommandHandler)

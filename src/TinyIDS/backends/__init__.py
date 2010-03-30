@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 #  This file is part of tinyids.
@@ -21,14 +20,3 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
-# The following makes it possible to run the script from
-# the current location during development.
-import sys
-sys.path = ['../src/'] + sys.path
-
-from TinyIDS.main import server_main
-
-
-if __name__ == '__main__':
-	server_main()

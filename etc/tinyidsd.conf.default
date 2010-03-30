@@ -1,0 +1,12 @@
+
+
+# TinyIDS Server Configuration file
+
+[main]
+interface = 127.0.0.1
+port = 10500
+user = tinyids
+group = tinyids
+logfile = /var/log/tinyids.log
+loglevel = debug
+use_keys = 0

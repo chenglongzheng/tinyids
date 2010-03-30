@@ -1,0 +1,26 @@
+
+
+# TinyIDS Client Configuration file
+
+[main]
+extra_backends_dir = /etc/tinyids/backends
+# You can set which tests are run by providing a comma-delimited list of tests
+# Default test names are: binhash
+# If missing or not set, all valid tests are run.
+tests =
+ 
+#
+# Servers
+#
+# Server name format by convention:
+# server__<name>
+#
+# If the 'enabled' option is missing, the server is enabled by default.
+# If the 'public_key' option is missing or empty, then keys are not used
+# when communicating with the specific server.
+#
+[server__myserver]
+enabled = 1
+host = 127.0.0.1
+port = 10500
+public_key = 

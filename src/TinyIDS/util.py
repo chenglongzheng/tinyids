@@ -21,6 +21,8 @@
 #  limitations under the License.
 #
 
+import imp
+
 try:
     import hashlib
     sha1 = hashlib.sha1
@@ -29,9 +31,22 @@ except ImportError:
     sha1 = sha.new
 
 
+
+
 def sha1sum(data):
     """Returns the sha1 checksum of the provided data."""
     s = sha1()
     s.update(data)
     return s.hexdigest()
+
+def load_backend(base_dir, name):
+    """Loads the backend module and returns it."""
+    name = name.strip()
+    fp, pathname, desc = imp.find_module(name, [base_dir])
+    try:
+        x = imp.load_module(name, fp, pathname, desc)
+    finally:
+        if fp:
+            fp.close()
+    return x
 

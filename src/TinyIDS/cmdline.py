@@ -22,8 +22,6 @@
 #
 
 
-
-
 DEFAULT_SERVER_CONFIG = '/etc/tinyids/tinyidsd.conf'
 DEFAULT_CLIENT_CONFIG = '/etc/tinyids/tinyids.conf'
 
@@ -39,7 +37,7 @@ USAGE_CLIENT = """
 
 Only one of the following can be used at a time:
 
-    [--check HASH] [--update HASH] [--delete] [--change-phrase]
+    [--test] [--check] [--update] [--delete] [--change-phrase]
     
 """
 
@@ -74,8 +72,9 @@ def parse_client():
 
     parser.set_defaults(
         confpath = DEFAULT_CLIENT_CONFIG,
-        check = None,
-        update = None,
+        test = False,
+        check = False,
+        update = False,
         delete = False,
         changephrase = False,
         debug = False,
@@ -86,13 +85,16 @@ def parse_client():
 configuration file. If a path is not set, the configuration file will be \
 searched at the default location. [Default: %s]""" % (DEFAULT_CLIENT_CONFIG))
     
-    parser.add_option('--check', action='store', type='string',
-            dest='check', metavar='HASH', help="""Checks the provided hash \
-with the one that is stored at the remote servers.""")
+    parser.add_option('--test', action='store_true', dest='test',
+        help="""Tests communications with the remote servers.""")
     
-    parser.add_option('--update', action='store', type='string',
-            dest='update', metavar='HASH', help="""Updates the hash at the
-remote servers with the provided one. You will be prompted for the passphrase.""")
+    parser.add_option('--check', action='store_true', dest='check',
+        help="""Checks the calculated hash with the one that is stored at the \
+        remote servers.""")
+    
+    parser.add_option('--update', action='store_true', dest='update',
+        help="""Updates the hash at the remote servers with the calculated one. \
+You will be prompted for the passphrase.""")
 
     parser.add_option('--delete', action='store_true', dest='delete',
             help="""Delete the hash that is stored at the remote servers. \
@@ -107,11 +109,15 @@ You will be prompted for the current and the new passphrase.""")
     
     opts, args = parser.parse_args()
     if args:
-        parser.error("invalid number of arguments")
+        parser.error('invalid number of arguments')
     # Only one of the following options can be used at a time:
     # --check, --update, --delete, --change-phrase
-    if 1 != [bool(opts.check), bool(opts.update), bool(opts.delete), bool(opts.changephrase)].count(True):
-        parser.error("only one of the following options can be used at a time: --check, --update, --delete, --change-phrase")
+    nr = [opts.test, opts.check, opts.update, opts.delete, opts.changephrase].count(True)
+    if nr == 0:
+        parser.error('a command must be run: --test, --check, --update, --delete, --change-phrase')
+    elif nr != 1:
+        parser.error('only one of the following options can be used at a time: --test, --check, --update, --delete, --change-phrase')
+    
     return opts
 
 

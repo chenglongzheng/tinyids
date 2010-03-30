@@ -24,8 +24,8 @@
 
 # The following makes it possible to run the script from
 # the current location during development.
-#import sys
-#sys.path = ['../'] + sys.path
+import sys
+sys.path = ['../src/'] + sys.path
 
 from TinyIDS.main import main
 

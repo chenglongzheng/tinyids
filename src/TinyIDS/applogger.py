@@ -3,7 +3,7 @@ import sys
 import os
 import logging
 
-from TinyIDS.config import cfg
+from TinyIDS.config import get_client_configuration, get_server_configuration
 
 
 DEFAULT_LOGFILE_PATH = 'tinyids.log'
@@ -43,6 +43,7 @@ def init_file_logger():
     """Adds a file handler to the 'main' logger."""
     
     # Logger settings: path, level
+    cfg = get_server_configuration()
     
     path = cfg.get('main', 'logfile')
     if not path:

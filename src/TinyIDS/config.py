@@ -1,17 +1,69 @@
 
 
+DEFAULT_PORT = 10500
+
+
+import os
 import ConfigParser
 
 
-class TinyIDSConfig(ConfigParser.RawConfigParser):
-    def __init__(self):
-        ConfigParser.RawConfigParser.__init__(self)
-        self.add_section('main')
-        self.set('main', 'interface', '127.0.0.1')
-        self.set('main', 'port', '9999')
-        self.set('main', 'logfile', 'tinyids.log')
-        self.set('main', 'loglevel', 'debug')
-        self.set('main', 'datadir', 'tinyids.db')
-        print 'CONFIG WAS CREATED'
+class ConfigPathNotSetError(Exception):
+    pass
 
-cfg = TinyIDSConfig()
+class ConfigFileNotFoundError(Exception):
+    pass
+
+
+class TinyIDSConfigParser(ConfigParser.RawConfigParser):
+
+    def getlist(self, section, option):
+        value_list = self.get(section, option)
+        return [value.strip() for value in value_list.split(',') if value.strip()]
+    
+
+def get_client_configuration(path=None):
+    """Returns the global client configuration object 'cfg_client'.
+    
+    If cfg_client has not been created, this function creates it and
+    reads the relevant configuration file.
+    
+    Accepts a path to the configuration file. If the path is missing and
+    global cfg_client object has not been set, the ConfigPathNotSetError
+    exception is raised.
+    
+    """
+    global cfg_client
+    if not globals().has_key('cfg_client'):
+        if not path:
+            raise ConfigPathNotSetError
+        elif not os.path.exists(path):
+            raise ConfigFileNotFoundError
+        cfg_client = TinyIDSConfigParser()
+        cfg_client.read(path)
+        return cfg_client
+    else:
+        return cfg_client
+
+def get_server_configuration(path=None):
+    """Returns the global server configuration object 'cfg_server'.
+    
+    If cfg_server has not been created, this function creates it and
+    reads the relevant configuration file.
+    
+    Accepts a path to the configuration file. If the path is missing and
+    global cfg_server object has not been set, the ConfigPathNotSetError
+    exception is raised.
+    
+    """
+    global cfg_server
+    if not globals().has_key('cfg_server'):
+        if not path:
+            raise ConfigPathNotSetError
+        elif not os.path.exists(path):
+            raise ConfigFileNotFoundError
+        cfg_server = TinyIDSConfigParser()
+        cfg_server.read(path)
+        return cfg_server
+    else:
+        return cfg_server
+
