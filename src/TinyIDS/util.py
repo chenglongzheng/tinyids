@@ -21,7 +21,11 @@
 #  limitations under the License.
 #
 
+import os
 import imp
+import pickle
+import base64
+import zlib
 
 try:
     import hashlib
@@ -47,4 +51,23 @@ def load_backend(base_dir, name):
         if fp:
             fp.close()
     return x
+
+def export_key_to_file(key, path):
+    """
+    key: a key as a dict as it is created by rsa.gen_pubpriv_keys
+    path: path on the filesystem
+    """
+    f = open(path, 'w')
+    pickle.dump(key, f)
+    f.close()
+    os.chmod(path, 0600)
+
+def import_key_from_file(path):
+    """
+    path: path on the filesystem
+    """
+    f = open(path)
+    data = pickle.load(f)
+    f.close()
+    return data
 

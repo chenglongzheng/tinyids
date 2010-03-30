@@ -4,11 +4,12 @@
 
 [main]
 extra_backends_dir = /etc/tinyids/backends
+keys_dir = /etc/tinyids/keys/
 # You can set which tests are run by providing a comma-delimited list of tests
 # Default test names are: binhash
 # If missing or not set, all valid tests are run.
 tests =
- 
+
 #
 # Servers
 #

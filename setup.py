@@ -63,6 +63,7 @@ if __name__=='__main__':
         packages = [
             'TinyIDS',
             'TinyIDS.backends',
+            'TinyIDS.rsa',
         ],
         package_dir = {'': 'src'},
         data_files = [

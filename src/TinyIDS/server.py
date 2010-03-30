@@ -1,16 +1,41 @@
 
 import os
 import SocketServer
+import socket
 import logging
+import base64
 
 from TinyIDS import database
 from TinyIDS import info
+from TinyIDS import config
+from TinyIDS import rsa
+from TinyIDS import util
+
 
 logger = logging.getLogger('main')
 
 
+class DataDecryptionError(Exception):
+    pass
+
+
 class TinyIDSServer(SocketServer.ThreadingTCPServer):
     
+    def __init__(self, server_address, RequestHandlerClass):
+        """Constructor of the TinyIDS Server.
+        
+        Extra instance attributes:
+        
+        cfg - the server ConfigParser instance
+        private_key - if PKI is enabled (use_keys = 1), then this should hold
+        the private key. Otherwise should be None
+        
+        """
+        self.cfg = config.get_server_configuration()
+        self.private_key = None
+        
+        SocketServer.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass)
+        
     def _database_activate(self):
         self.db = database.HashDatabase()
         logger.debug('Hash database initialized')
@@ -22,6 +47,7 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
     def server_activate(self):
         logger.debug('TinyIDS Server v%s starting...' % info.version)
         self._database_activate()
+        self._load_or_create_keys()
         SocketServer.ThreadingTCPServer.server_activate(self)
         logger.debug('Accepting connections on %s:%s' % self.server_address)
     
@@ -34,15 +60,49 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
     def verify_request(self, request, client_address):
         """TODO: IP-based access control."""
         return True
+    
+    
+    def _load_or_create_keys(self):
+        """Loads the server private key. If it does not exist, it is created."""
+        
+        if not self.cfg.getboolean('main', 'use_keys'):
+            self.private_key = None
+            return
+        
+        logger.debug('PKI support enabled')
+        keys_dir = self.cfg.get('main', 'keys_dir')
+        public_key_path = '%s.pub' % os.path.join(keys_dir, self._get_key_basename())
+        private_key_path = '%s.key' % os.path.join(keys_dir, self._get_key_basename())
+        
+        # Create both keys if the private key is missing
+        if not os.path.exists(private_key_path):
+            logger.warning('Generating RSA keypair. Please wait...')
+            public_key, private_key = self._generate_keypair()
+            util.export_key_to_file(public_key, public_key_path)
+            logger.info('Public key saved to: %s' % public_key_path)
+            util.export_key_to_file(private_key, private_key_path)
+            logger.info('Private key saved to: %s' % private_key_path)
+        
+        # Load the server's private key
+        self.private_key = util.import_key_from_file(private_key_path)
+        logger.info('Server private key loaded successfully')
+        
+    def _get_key_basename(self):
+        return socket.gethostname()
+    
+    def _generate_keypair(self):
+        key_bits = self.cfg.getint('main', 'key_bits')
+        public_key, private_key = rsa.gen_pubpriv_keys(key_bits)
+        return public_key, private_key
 
 
 
 class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     
+    max_data_len = 8192
+    cmd_end = '\r\n'
+        
     def __init__(self, request, client_address, server):
-    
-        self.max_data_len = 8192
-        self.cmd_end = '\r\n'
         
         # Indicator of the command that is being processed
         self.doing_command = None
@@ -68,13 +128,27 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
         
         SocketServer.StreamRequestHandler.__init__(self, request, client_address, server)
     
-    #def _decrypt_command(self):
-    #    pass
+    def _client(self):
+        return '%s:%s' % self.client_address
+    
+    def _decrypt_data(self, data_enc_b64):
+        print repr(data_enc_b64)
+        data_enc = base64.b64decode(data_enc_b64)
+        try:
+            data = rsa.decrypt(data_enc, self.server.private_key)
+        except:
+            raise DataDecryptionError
+        logger.debug('decrypted data')
+        return data
 
     def _get_data(self):
         #data = self.rfile.read(self.max_data_len)
-        data = self.rfile.readline().strip()
-        return data.rstrip(self.cmd_end)
+        data = self.rfile.readline(self.max_data_len).strip()
+        data = data.rstrip(self.cmd_end)
+        if self.server.private_key is not None:
+            # PKI is enabled
+            data = self._decrypt_data(data)
+        return data
     
     def _verify_grammar(self, data):
         cmd_parts = data.split()
@@ -104,7 +178,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     
     def _com_CHECK(self, hash):
         try:
-            hash_db = self.server.db.get(self.client_address[0])
+            hash_db = self.server.db.get(self._client())
         except database.HashDoesNotExistError:
             self._send_response(31) # NOT FOUND
         else:
@@ -115,7 +189,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     
     def _com_UPDATE(self, hash, passphrase):
         try:
-            self.server.db.put(self.client_address[0], hash, passphrase)
+            self.server.db.put(self._client(), hash, passphrase)
         except database.InvalidPassphraseError:
             self._send_response(42) # INVALID PASSPHRASE
         else:
@@ -123,7 +197,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     
     def _com_DELETE(self, passphrase):
         try:
-            self.server.db.remove(self.client_address[0], passphrase)
+            self.server.db.remove(self._client(), passphrase)
         except database.HashDoesNotExistError:
             self._send_response(31) # NOT FOUND
         except database.InvalidPassphraseError:
@@ -133,7 +207,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     
     def _com_CHANGEPHRASE(self, passphrase_old, passphrase_new):
         try:
-            self.server.db.change_passphrase(self.client_address[0], passphrase_old, passphrase_new)
+            self.server.db.change_passphrase(self._client(), passphrase_old, passphrase_new)
         except database.HashDoesNotExistError:
             self._send_response(31) # NOT FOUND
         except database.InvalidPassphraseError:
@@ -142,35 +216,49 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
             self._send_response(20) # OK
     
     
-    #def _sign_response(self, msg):
-    #    return msg
+    def _sign_response(self, data_raw):
+        data_signed = rsa.sign(data_raw, self.server.private_key)
+        logger.debug('signed response')
+        data_signed_b64 = base64.b64encode(data_signed)
+        return data_signed_b64
     
-    def _send_response(self, code):
+    def _send_response(self, code, sign=True):
         msg, level = self.errcodes[code]
         
         if code == 20:
-            logger.info('%s ran %s successfully' % (self.client_address[0], self.doing_command))
+            logger.info('%s ran %s successfully' % (self._client(), self.doing_command))
         else:
-            logger.warning('%s failed with %s: %s' % (self.client_address[0], self.doing_command, msg))
+            logger.warning('%s failed with %s: %s' % (self._client(), self.doing_command, msg))
+        
+        if sign and self.server.private_key is not None:
+            # PKI is enabled
+            msg = self._sign_response(msg)
+            logger.debug('signed response')
         
         self.wfile.write(msg + self.cmd_end)
-        logger.debug('sent response to %s' % self.client_address[0])
+        logger.debug('sent response to %s' % self._client())
         
         #self.server.db.dbprint()
     
    
-    
+    def setup(self):
+        logger.debug('%s client connected' % self._client())
+        SocketServer.StreamRequestHandler.setup(self)
+        
     def handle(self):
-    
-        data = self._get_data()
-        if self._verify_grammar(data):
-            self._process_command(data)
-            self._finish_command()
+        try:
+            data = self._get_data()
+        except DataDecryptionError:
+            self._send_response(40, sign=False) # INVALID CLIENT
         else:
-            self._send_response(41)
-
-
-            
-
+            if self._verify_grammar(data):
+                self._process_command(data)
+                self._finish_command()
+            else:
+                self._send_response(41)
     
-    
+    def finish(self):
+        SocketServer.StreamRequestHandler.finish(self)
+        logger.debug('%s client disconnected' % self._client())
+
+

@@ -26,19 +26,29 @@ import glob
 import socket
 import logging
 import getpass
+import base64
 
 import TinyIDS.backends
 from TinyIDS import config
-from TinyIDS.util import sha1, load_backend
+from TinyIDS.util import sha1, load_backend, import_key_from_file
+from TinyIDS import rsa
 
 
 logger = logging.getLogger('main')
+
+
+class DataEncryptionError(Exception):
+    pass
+
+class DataVerificationError(Exception):
+    pass
 
 
 class TinyIDSClient:
     """A client implementation of the TinyIDS protocol."""
     
     cmd_end = '\r\n'
+    max_response_len = 1024
     
     def __init__(self, command):
         self.command = command  # TEST | CHECK | UPDATE | DELETE | CHANGEPHRASE
@@ -85,17 +95,39 @@ class TinyIDSClient:
                 enabled_servers.append(section)
         return enabled_servers
     
+    def _encrypt_data(self, data_raw, public_key):
+        try:
+            data_enc = rsa.encrypt(data_raw, public_key)
+        except:
+            raise DataEncryptionError
+        data_enc_b64 = base64.b64encode(data_enc)
+        print repr(data_enc_b64)
+        return data_enc_b64
+    
     def send(self, host, port, public_key, data):
+        if public_key is not None:
+            data = self._encrypt_data(data, public_key)
+        print repr(data)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
         logger.debug('established connection to server %s' % self.server_name)
         logger.debug('sendind %s command to server: %s' % (self.command, self.server_name))
         self.sock.send(data + self.cmd_end)
     
-    def get_server_response(self):
-        response = self.sock.recv(1024)
+    def _verify_response(self, response_signed_b64, public_key):
+        response_signed = base64.b64decode(response_signed_b64)
+        try:
+            return rsa.verify(response_signed, public_key)
+        except:
+            raise DataVerificationError
+    
+    def get_server_response(self, public_key):
+        response = self.sock.recv(self.max_response_len).strip()
+        response = response.rstrip(self.cmd_end)
         logger.debug('received response from server: %s' % self.server_name)
         self._close_socket()
+        if public_key is not None:
+            response = self._verify_response(response, public_key)
         return response.strip()
     
     def hash_data(self, data):
@@ -159,6 +191,7 @@ class TinyIDSClient:
         if self.command in ('CHECK', 'UPDATE'):
             self.run_checks()
         
+        # Execute command on server
         for server in enabled_servers:
             # server is in 'server__<name>' format (a section name)
             # Here we set self.server_name to the canonical server name
@@ -171,9 +204,11 @@ class TinyIDSClient:
                 port = self.cfg.getint(server, 'port')
             public_key = None
             if self.cfg.has_option(server, 'public_key'):
-                _pk = self.cfg.get(server, 'public_key')
-                if _pk:
-                    public_key = _pk
+                public_key_fname = self.cfg.get(server, 'public_key')
+                if public_key_fname:
+                    keys_dir = self.cfg.get('main', 'keys_dir')
+                    public_key_path = os.path.join(keys_dir, public_key_fname)
+                    public_key = import_key_from_file(public_key_path)
             
             # Run command on the server
             try:
@@ -182,12 +217,19 @@ class TinyIDSClient:
                 logger.error('connection error: "%s"' % e)
                 logger.warning('skipping server: %s' % self.server_name)
                 self._close_socket()
+            except DataEncryptionError:
+                logger.error('data encryption error')
+                logger.warning('skipping server: %s' % self.server_name)
+                self._close_socket()
+            except DataVerificationError:
+                logger.error('data verification error')
+                self._close_socket()
         
         self.client_close()
     
     def _communicate(self, host, port, public_key, data):
         self.send(host, port, public_key, data)
-        response = self.get_server_response()
+        response = self.get_server_response(public_key)
         self._check_command_status(response)
     
     def _check_command_status(self, response):

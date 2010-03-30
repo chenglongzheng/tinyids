@@ -1,6 +1,6 @@
-
-
+#
 # TinyIDS Server Configuration file
+#
 
 [main]
 interface = 0.0.0.0
@@ -10,3 +10,5 @@ group = tinyids
 logfile = /var/log/tinyids.log
 loglevel = debug
 use_keys = 0
+keys_dir = /etc/tinyids/keys/
+key_bits = 512
