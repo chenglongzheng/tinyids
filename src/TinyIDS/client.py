@@ -24,6 +24,7 @@
 import os
 import socket
 import logging
+import getpass
 
 import TinyIDS.backends
 from TinyIDS import config
@@ -34,20 +35,33 @@ logger = logging.getLogger('main')
 
 
 class TinyIDSClient:
-
+    """A client implementation of the TinyIDS protocol."""
+    
     cmd_end = '\r\n'
     
     def __init__(self, command):
         self.command = command  # TEST | CHECK | UPDATE | DELETE | CHANGEPHRASE
         self.hasher = sha1()
         self.cfg = config.get_client_configuration()
+        # This is socket.socket object while connected to server
+        # Should be set to None as soon the connection is closed
+        # or a socket error occurs.
         self.sock = None
+        # Should hold the name of the server as long as there is a
+        # valid connection to it.
+        self.server_name = None
         logger.debug('client initialized')
     
     def _close_socket(self):
-        self.sock.close()
+        """Should be called after socket errors."""
+        if isinstance(self.sock, socket.socket):
+            self.sock.close()
         self.sock = None
+        self.server_name = None
     
+    def client_close(self):
+        logger.debug('client closing')
+        
     def _get_server_canonical_name(self, server_name):
         """Returns the name of the server after stripping the 'server__' prefix'"""
         return server_name.split('__')[1]
@@ -59,8 +73,9 @@ class TinyIDSClient:
         for section in self.cfg.sections():
             if not section.startswith('server__'):
                 continue
+            server_name = self._get_server_canonical_name(section)
             if not self.cfg.has_option(section, 'host'):
-                logger.warning('misconfigured server: %s' % self._get_server_canonical_name(section))
+                logger.warning('misconfigured server: %s' % server_name)
                 continue
             if self.cfg.has_option(section, 'enabled'):
                 is_enabled = self.cfg.getboolean(section, 'enabled')
@@ -72,12 +87,14 @@ class TinyIDSClient:
     def send(self, host, port, public_key, data):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
+        logger.debug('established connection to server %s' % self.server_name)
+        logger.debug('sendind %s command to server: %s' % (self.command, self.server_name))
         self.sock.send(data + self.cmd_end)
     
     def get_server_response(self):
         response = self.sock.recv(1024)
-        self.sock.close()
-        self.sock = None
+        logger.debug('received response from server: %s' % self.server_name)
+        self._close_socket()
         return response.strip()
     
     def hash_data(self, data):
@@ -92,7 +109,7 @@ class TinyIDSClient:
     def run_checks(self):
         backends_dir = TinyIDS.backends.__path__[0]
         #backends_glob_exp = os.path.join(backends_dir, '*.py')
-        plugins_dir = DEFAULT_PLUGINS_DIR
+    #    plugins_dir = DEFAULT_PLUGINS_DIR
         #plugins_glob_exp = os.path.join(plugins_dir, '*.py')
         # Run internal backend tests first
         for backend_fname in os.listdir(backends_dir):
@@ -120,6 +137,11 @@ class TinyIDSClient:
             logger.warning('no servers configured. aborting...')
             return
         for server in enabled_servers:
+            # server is in 'server__<name>' format (a section name)
+            # Here we set self.server_name to the canonical server name
+            self.server_name = self._get_server_canonical_name(server)
+            
+            # Get server settings
             host = self.cfg.get(server, 'host')
             port = config.DEFAULT_PORT
             if self.cfg.has_option(server, 'port'):
@@ -129,26 +151,82 @@ class TinyIDSClient:
                 _pk = self.cfg.get(server, 'public_key')
                 if _pk:
                     public_key = _pk
-            srv_name = self._get_server_canonical_name(server)
             
-            logger.debug('sendind %s command to server: %s' % (self.command, srv_name))
-            
+            # Run command on the server
             try:
                 func(host, port, public_key)
             except socket.error, e:
-                logger.error('server error: "%s"' % e)
-                logger.warning('skipping server: %s' % srv_name)
+                logger.error('connection error: "%s"' % e)
+                logger.warning('skipping server: %s' % self.server_name)
                 self._close_socket()
                 continue
-            
         
-        
-    def _com_TEST(self, host, port, public_key):
-        data = self.command
+        self.client_close()
+    
+    def _communicate(self, host, port, public_key, data):
         self.send(host, port, public_key, data)
         response = self.get_server_response()
+        self._check_command_status(response)
+    
+    def _check_command_status(self, response):
         if response.startswith('20'):
             logger.debug('%s command was successful' % self.command)
+            print 'SUCCESS'
         else:
-            logger.warning('%s command failed' % self.command)
+            logger.warning('%s command failed with: %s' % (self.command, response))
+    
+    def _get_passphrase(self, msg):
+        data = ''
+        while not data:
+            data = getpass.getpass('%s: ' % msg)
+        return data
+    
+    def _com_TEST(self, host, port, public_key):
+        """
+        Syntax: TEST
+        """
+        data = self.command
+        self._communicate(host, port, public_key, data)
         
+    def _com_CHECK(self, host, port, public_key):
+        """
+        Syntax: CHECK <hash>
+        """
+        data = '%s %s' % (self.command, self.get_checksum())
+        self._communicate(host, port, public_key, data)
+    
+    def _com_UPDATE(self, host, port, public_key):
+        """
+        Syntax: UPDATE <hash> <passphrase>
+        """
+        while True:
+            passphrase = self._get_passphrase('Passphrase')
+            passphrase_confirm = self._get_passphrase('Confirm passphrase')
+            if passphrase == passphrase_confirm:
+                break
+            logger.error('passphrases do not match. try again...')
+        data = '%s %s %s' % (self.command, self.get_checksum(), passphrase)
+        self._communicate(host, port, public_key, data)
+    
+    def _com_DELETE(self, host, port, public_key):
+        """
+        Syntax: DELETE <passphrase>
+        """
+        passphrase = self._get_passphrase('Passphrase')
+        data = '%s %s' % (self.command, passphrase)
+        self._communicate(host, port, public_key, data)
+    
+    def _com_CHANGEPHRASE(self, host, port, public_key):
+        """
+        Syntax: CHANGEPHRASE <old_passphrase> <new_passphrase>
+        """
+        passphrase_old = self._get_passphrase('Old passphrase')
+        while True:
+            passphrase_new = self._get_passphrase('New passphrase')
+            passphrase_new_confirm = self._get_passphrase('Confirm new passphrase')
+            if passphrase_new == passphrase_new_confirm:
+                break
+            logger.error('passphrases do not match. try again...')
+        data = '%s %s %s' % (self.command, passphrase_old, passphrase_new)
+        self._communicate(host, port, public_key, data)
+

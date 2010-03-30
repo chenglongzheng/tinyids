@@ -31,8 +31,6 @@ except ImportError:
     sha1 = sha.new
 
 
-
-
 def sha1sum(data):
     """Returns the sha1 checksum of the provided data."""
     s = sha1()

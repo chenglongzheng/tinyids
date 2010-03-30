@@ -1,5 +1,7 @@
 
 
+DEFAULT_SERVER_CONFIG = '/etc/tinyids/tinyidsd.conf'
+DEFAULT_CLIENT_CONFIG = '/etc/tinyids/tinyids.conf'
 DEFAULT_PORT = 10500
 
 

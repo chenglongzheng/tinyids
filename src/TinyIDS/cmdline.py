@@ -22,9 +22,6 @@
 #
 
 
-DEFAULT_SERVER_CONFIG = '/etc/tinyids/tinyidsd.conf'
-DEFAULT_CLIENT_CONFIG = '/etc/tinyids/tinyids.conf'
-
 USAGE_CLIENT = """
 
 %prog -h, --help
@@ -59,6 +56,7 @@ import sys
 from optparse import OptionParser
 
 from TinyIDS import info
+from TinyIDS.config import DEFAULT_SERVER_CONFIG, DEFAULT_CLIENT_CONFIG
 
 
 def parse_client():

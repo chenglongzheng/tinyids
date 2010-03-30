@@ -38,7 +38,7 @@ def main():
     else:
         applogger.init_std_stream_loggers()
     logger = logging.getLogger('main')
-    logger.debug('getting client configuration')
+    logger.debug('getting client configuration from %s' % opts.confpath)
     try:
         cfg = config.get_client_configuration(opts.confpath)
     except config.ConfigFileNotFoundError:
@@ -58,6 +58,7 @@ def main():
     client = TinyIDSClient(command)
     client.run()
 
+
 def server_main():
     opts = cmdline.parse_server()
     if opts.debug:
@@ -65,7 +66,7 @@ def server_main():
     else:
         applogger.init_file_logger()
     logger = logging.getLogger('main')
-    logger.debug('getting server configuration')
+    logger.debug('getting server configuration from %s' % opts.confpath)
     try:
         cfg = config.get_server_configuration(opts.confpath)
     except config.ConfigFileNotFoundError:
