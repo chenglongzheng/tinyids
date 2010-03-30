@@ -1,6 +1,6 @@
-
-
+#
 # TinyIDS Client Configuration file
+#
 
 [main]
 extra_backends_dir = /etc/tinyids/backends
@@ -24,4 +24,4 @@ tests =
 enabled = 1
 host = 127.0.0.1
 port = 10500
-public_key = 
+#public_key = test.pub 
