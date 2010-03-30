@@ -16,3 +16,10 @@ this software without prior written permission of George Notaras.
 
 For license information, please read the LICENSE file.
 
+-----------------------------------------------------------------------
+
+The TinyIDS distribution ships with the following additional packages:
+
+python-rsa - Pure-Python RSA implementation
+This software was written by Sybren Stuvel, Marloes de Boer and Ivo Tamboer.
+For license information, please read the LICENSE.rsa file.

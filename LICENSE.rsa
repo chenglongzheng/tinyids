@@ -1,0 +1,9 @@
+Pure-Python RSA implementation
+
+python-rsa - http://stuvel.eu/rsa
+
+This software was written by Sybren Stuvel, Marloes de Boer and Ivo Tamboer
+
+Copyright (c) Sybren Stuvel, Marloes de Boer and Ivo Tamboer
+
+Distributed under the terms of the GPL + EUPL licenses.
