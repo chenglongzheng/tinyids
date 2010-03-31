@@ -1,7 +1,6 @@
 
 import os
 import SocketServer
-import socket
 import logging
 
 from TinyIDS import database

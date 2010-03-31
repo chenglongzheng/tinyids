@@ -1,7 +1,6 @@
 
 import os
 import anydbm
-import logging
 
 from TinyIDS.util import sha1sum
 

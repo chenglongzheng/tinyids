@@ -36,18 +36,11 @@ from TinyIDS.util import sha1, load_backend
 logger = logging.getLogger('main')
 
 
-class DataEncryptionError(Exception):
-    pass
-
-class DataVerificationError(Exception):
-    pass
-
-
 class TinyIDSClient:
     """A client implementation of the TinyIDS protocol."""
     
     cmd_end = '\r\n'
-    max_response_len = 10240
+    max_response_len = 1024
     
     def __init__(self, command):
         
@@ -77,56 +70,10 @@ class TinyIDSClient:
         self.sock = None
         self.server_name = None
     
-    def client_close(self):
+    def _client_close(self):
         logger.debug('client closing')
         
-    def _get_server_canonical_name(self, server_name):
-        """Returns the name of the server after stripping the 'server__' prefix'"""
-        return server_name.split('__')[1]
-    
-    def get_enabled_server_list(self):
-        """Returns a list of servers that have been enabled in the
-        client configuration."""
-        enabled_servers = []
-        for section in self.cfg.sections():
-            if not section.startswith('server__'):
-                continue
-            server_name = self._get_server_canonical_name(section)
-            if not self.cfg.has_option(section, 'host'):
-                logger.warning('misconfigured server: %s' % server_name)
-                continue
-            if self.cfg.has_option(section, 'enabled'):
-                is_enabled = self.cfg.getboolean(section, 'enabled')
-                if not is_enabled:
-                    continue
-                enabled_servers.append(section)
-        return enabled_servers
-    
-    def send(self, host, port, data):
-        if self.pki.public_key is not None:
-            data = self.pki.encrypt(data)
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((host, port))
-        logger.info('Established connection to server: %s' % self.server_name)
-        self.sock.send(data + self.cmd_end)
-        logger.info('Sent %s command to server: %s' % (self.command, self.server_name))
-    
-    def get_server_response(self):
-        
-        response = self.sock.recv(self.max_response_len).strip()
-        response = response.rstrip(self.cmd_end)
-        logger.info('Received response from server: %s' % self.server_name)
-        if self.pki.public_key is not None:
-            response = self.pki.verify(response)
-        return response.strip()
-    
-    def hash_data(self, data):
-        self.hasher.update(data)
-    
-    def get_checksum(self):
-        return self.hasher.hexdigest()
-    
-    def run_checks(self):
+    def _run_checks(self):
         backends = []
         core_backends_dir = TinyIDS.backends.__path__[0]
         backends.extend(glob.glob(os.path.join(core_backends_dir, '*.py')))
@@ -167,55 +114,49 @@ class TinyIDSClient:
             if invalid_user_defined_tests:
                 logger.warning('Invalid user-defined tests: %s' % ', '.join(invalid_user_defined_tests))
     
-    def run(self):
+    def _get_server_canonical_name(self, server_name):
+        """Returns the name of the server after stripping the 'server__' prefix'"""
+        return server_name.split('__')[1]
+    
+    def _get_enabled_server_list(self):
+        """Returns a list of servers that have been enabled in the
+        client configuration."""
+        enabled_servers = []
+        for section in self.cfg.sections():
+            if not section.startswith('server__'):
+                continue
+            server_name = self._get_server_canonical_name(section)
+            if not self.cfg.has_option(section, 'host'):
+                logger.warning('misconfigured server: %s' % server_name)
+                continue
+            if self.cfg.has_option(section, 'enabled'):
+                is_enabled = self.cfg.getboolean(section, 'enabled')
+                if not is_enabled:
+                    continue
+                enabled_servers.append(section)
+        return enabled_servers
+    
+    def _send(self, host, port, data):
+        if self.pki.public_key is not None:
+            data = self.pki.encrypt(data)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((host, port))
+        logger.info('Established connection to server: %s' % self.server_name)
+        self.sock.send(data + self.cmd_end)
+        logger.info('Sent %s command to server: %s' % (self.command, self.server_name))
+    
+    def _get_server_response(self):
         
-        enabled_servers = self.get_enabled_server_list()
-        if not enabled_servers:
-            logger.warning('No servers configured. shutting down...')
-            self.client_close()
-        
-        # Decide which method to execute
-        func = getattr(self, '_com_%s' % self.command)
-        
-        # Tests are required to run only with the CHECK and UPDATE commands
-        if self.command in ('CHECK', 'UPDATE'):
-            self.run_checks()
-        
-        # Execute command on server
-        for server in enabled_servers:
-            # server is in 'server__<name>' format (a section name)
-            # Here we set self.server_name to the canonical server name
-            self.server_name = self._get_server_canonical_name(server)
-            
-            # Get server settings
-            host = self.cfg.get(server, 'host')
-            port = config.DEFAULT_PORT
-            if self.cfg.has_option(server, 'port'):
-                port = self.cfg.getint(server, 'port')
-            if self.cfg.has_option(server, 'public_key'):
-                public_key_fname = self.cfg.get(server, 'public_key')
-                if public_key_fname:
-                    self.pki.load_external_public_key(public_key_fname) # sets self.pki.public_key
-                    
-            # Run command on the server
-            try:
-                func(host, port)
-            except socket.error, (errno, strerror):
-                logger.error('Connection error: \'%s\'' % strerror)
-                logger.warning('Skipping server: %s' % self.server_name)
-            except crypto.DataEncryptionError:
-                logger.warning('FAILURE: could not encrypt data for server \'%s\'. Skipping server...' % self.server_name)
-            except crypto.DataVerificationError:
-                logger.warning('FAILURE: could not verify server response')
-            
-            self._close_socket()
-            self.pki.reset()    # sets self.pki.public_key to None
-        
-        self.client_close()
+        response = self.sock.recv(self.max_response_len).strip()
+        response = response.rstrip(self.cmd_end)
+        logger.info('Received response from server: %s' % self.server_name)
+        if self.pki.public_key is not None:
+            response = self.pki.verify(response)
+        return response.strip()
     
     def _communicate(self, host, port, data):
-        self.send(host, port, data)
-        response = self.get_server_response()
+        self._send(host, port, data)
+        response = self._get_server_response()
         self._check_command_status(response)
     
     def _check_command_status(self, response):
@@ -273,4 +214,59 @@ class TinyIDSClient:
             logger.error('passphrases do not match. try again...')
         data = '%s %s %s' % (self.command, passphrase_old, passphrase_new)
         self._communicate(host, port, data)
+    
+    # Public API
+    
+    def get_checksum(self):
+        return self.hasher.hexdigest()
+    
+    def hash_data(self, data):
+        self.hasher.update(data)
+    
+    def run(self):
+        
+        enabled_servers = self._get_enabled_server_list()
+        if not enabled_servers:
+            logger.warning('No servers configured. shutting down...')
+            self._client_close()
+        
+        # Decide which method to execute
+        func = getattr(self, '_com_%s' % self.command)
+        
+        # Tests are required to run only with the CHECK and UPDATE commands
+        if self.command in ('CHECK', 'UPDATE'):
+            self._run_checks()
+        
+        # Execute command on server
+        for server in enabled_servers:
+            # server is in 'server__<name>' format (a section name)
+            # Here we set self.server_name to the canonical server name
+            self.server_name = self._get_server_canonical_name(server)
+            
+            # Get server settings
+            host = self.cfg.get(server, 'host')
+            port = config.DEFAULT_PORT
+            if self.cfg.has_option(server, 'port'):
+                port = self.cfg.getint(server, 'port')
+            if self.cfg.has_option(server, 'public_key'):
+                public_key_fname = self.cfg.get(server, 'public_key')
+                if public_key_fname:
+                    self.pki.load_external_public_key(public_key_fname) # sets self.pki.public_key
+                    
+            # Run command on the server
+            try:
+                func(host, port)
+            except socket.error, (errno, strerror):
+                logger.error('Connection error: \'%s\'' % strerror)
+                logger.warning('Skipping server: %s' % self.server_name)
+            except crypto.DataEncryptionError:
+                logger.warning('FAILURE: could not encrypt data for server \'%s\'. Skipping server...' % self.server_name)
+            except crypto.DataVerificationError:
+                logger.warning('FAILURE: could not verify server response')
+            
+            self._close_socket()
+            self.pki.reset()    # sets self.pki.public_key to None
+        
+        self._client_close()
+
 

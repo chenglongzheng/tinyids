@@ -65,21 +65,23 @@ class RSAModule:
         return socket.gethostname()
     
     def _import_key_from_file(self, path):
-        """
-        path: path on the filesystem
-        """
+        """Imports a key from a file, where it has been stored as a base64
+        encoded string."""
         f = open(path)
-        data = pickle.load(f)
+        data = f.read()
         f.close()
+        data = pickle.loads(base64.decodestring(data))
         return data
     
     def _export_key_to_file(self, key, path):
-        """
+        """Exports the provided key to a file as a base64-encoded string.
+        
         key: a key as a dict as it is created by rsa.gen_pubpriv_keys
-        path: path on the filesystem
+        
         """
+        data = base64.encodestring(pickle.dumps(key))
         f = open(path, 'w')
-        pickle.dump(key, f)
+        f.write(data)
         f.close()
         os.chmod(path, 0600)
     

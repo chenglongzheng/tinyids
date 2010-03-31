@@ -51,8 +51,6 @@ USAGE_SERVER = """
 """
 
 
-import sys
-
 from optparse import OptionParser
 
 from TinyIDS import info
