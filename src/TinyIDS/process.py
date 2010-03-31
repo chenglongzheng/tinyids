@@ -36,29 +36,19 @@ class UserError(Exception):
     pass
 
 
-def run_in_background_as_user(user, group):
-    """Runs the current process as a background process.
+def run_in_background():
+    """Runs the current process in the background.
 
-    Based on the http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
-    Python CookBook recipe, named "fork a daemon process on UNIX", which is
-    based on the UNIX double-fork magic described in "Advanced Programming
-    in the Unix Environment" W. Richard Stevens, 1992, Addison-Wesley,
-    ISBN 0-201-56317-7
+    Based on the recipe:
     
-    Further Reading:
         http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
-        http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
-        http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/278731
+    
+    Note: Two forks are needed in order to prevent zombie processes.
     
     Returns the PID number as string.
     
-    This implementation is borrowed from DictExpress by George Notaras.
-    
     """
-    
-    # Two forks are needed in order to prevent zombie processes.
-    
-    # First fork
+    # Perform first fork
     try:
         pid = os.fork()         # Fork first child
         if pid > 0:
@@ -74,7 +64,7 @@ def run_in_background_as_user(user, group):
         raise ProcessError('Could not change to %s. %s' % strerror)
     os.setsid()
     
-    # Second fork
+    # Perform second fork
     try:
         pid = os.fork()         # Fork second child.
         if pid > 0:
@@ -85,23 +75,23 @@ def run_in_background_as_user(user, group):
     # The process now runs in the background.
     
     # Redirect standard file descriptors to /dev/null
+    stdin = open('/dev/null', 'r')
+    stdout = open('/dev/null', 'a+')
+    stderr = open('/dev/null', 'a+', 0)
     
-#    stdin = open('/dev/null', 'r')
-#    stdout = open('/dev/null', 'a+')
-#    stderr = open('/dev/null', 'a+', 0)
-#    
-#    sys.stdin.flush()
-#    sys.stdout.flush()
-#    sys.stderr.flush()
-#    
-#    os.close(sys.stdin.fileno())
-#    os.close(sys.stdout.fileno())
-#    os.close(sys.stderr.fileno())
-#    
-#    os.dup2(stdin.fileno(), sys.stdin.fileno())
-#    os.dup2(stdout.fileno(), sys.stdout.fileno())
-#    os.dup2(stderr.fileno(), sys.stderr.fileno())
+    sys.stdin.flush()
+    sys.stdout.flush()
+    sys.stderr.flush()
     
+    os.dup2(stdin.fileno(), sys.stdin.fileno())
+    os.dup2(stdout.fileno(), sys.stdout.fileno())
+    os.dup2(stderr.fileno(), sys.stderr.fileno())
+    
+    # Return PID
+    return os.getpid()
+
+    
+def run_as_user(user, group):
     # Drop root privileges
     # If the program has been started as root, drop privileges
     # and run as user/group.
@@ -127,8 +117,7 @@ def run_in_background_as_user(user, group):
         except KeyError:
             raise UserError('User not found: %s' % user)
     
-    # Return PID
-    return os.getpid()
+    
 
 
 # TODO: logfile should change permissions

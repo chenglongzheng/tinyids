@@ -63,8 +63,8 @@ def init_file_logger():
     
     try:
         file_handler = logging.FileHandler(path, 'a')
-    except IOError, err:
-        raise LoggerError("%s: '%s'" % (err[1], path))
+    except IOError, (errno, strerror):
+        raise LoggerError("%s: '%s'" % (strerror, path))
     else:
         file_handler.setFormatter(FORMATTER_DETAIL)
         file_handler.setLevel(DEFAULT_LOGLEVELS[level])
