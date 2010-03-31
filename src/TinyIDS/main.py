@@ -30,6 +30,7 @@ from TinyIDS import config
 from TinyIDS import info
 from TinyIDS.server import TinyIDSServer, TinyIDSCommandHandler, InternalServerError
 from TinyIDS.client import TinyIDSClient
+from TinyIDS.process import run_in_background_as_user
 
 
 def main():
@@ -62,19 +63,27 @@ def main():
 
 def server_main():
     opts = cmdline.parse_server()
+    try:
+        cfg = config.get_server_configuration(opts.confpath)
+    except config.ConfigFileNotFoundError:
+        sys.stderr.write('Configuration file not found')
+        sys.stderr.flush()
+        sys.exit(1)
+    
+    interface = cfg.get('main', 'interface')
+    port = cfg.getint('main', 'port')
+    user = cfg.get('main', 'user')
+    group = cfg.get('main', 'group')
+    
+    if not opts.debug:
+        run_in_background_as_user(user, group)
+    
     if opts.debug:
         applogger.init_std_stream_loggers(level='debug')
     else:
         applogger.init_file_logger()
     logger = logging.getLogger('main')
-    logger.debug('Getting server configuration from %s' % opts.confpath)
-    try:
-        cfg = config.get_server_configuration(opts.confpath)
-    except config.ConfigFileNotFoundError:
-        logger.critical('Configuration file not found')
-        sys.exit(1)
-    interface = cfg.get('main', 'interface')
-    port = cfg.getint('main', 'port')
+    logger.debug('Got server configuration from %s' % opts.confpath)
     
     logger.info('TinyIDS Server v%s starting...' % info.version)
     try:
