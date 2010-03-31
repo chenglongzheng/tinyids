@@ -22,6 +22,7 @@
 #
 
 import sys
+import os
 import logging
 
 from TinyIDS import applogger
@@ -64,10 +65,11 @@ def main():
 
 def server_main():
     opts = cmdline.parse_server()
+    config_path = os.path.abspath(opts.confpath)
     try:
-        cfg = config.get_server_configuration(opts.confpath)
+        cfg = config.get_server_configuration(config_path)
     except config.ConfigFileNotFoundError:
-        sys.stderr.write('ERROR: Configuration file not found\n')
+        sys.stderr.write('ERROR: Configuration file not found: %s\n' % config_path)
         sys.stderr.flush()
         sys.exit(1)
     

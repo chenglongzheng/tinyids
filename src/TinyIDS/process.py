@@ -92,33 +92,32 @@ def run_in_background():
 
     
 def run_as_user(user, group):
-    # Drop root privileges
-    # If the program has been started as root, drop privileges
-    # and run as user/group.
-    #
-    # groupadd -r tinyids
-    # useradd -r -g tinyids tinyids
-    #
-    if os.getuid() == 0:
-        # Get the UID/GID for the option-defined User/Group
-        new_gid = grp.getgrnam(group)[2]
-        new_uid = pwd.getpwnam(user)[2]
-        
-        # The new GID should be set first
-        try:
-            os.setgid(new_gid)
-            #os.setegid(new_gid)    # Not needed. setgid sets also the effective GID
-        except KeyError:
-            raise UserError('Group not found: %s' % group)
-        # Then the new UID
-        try:
-            os.setuid(new_uid)
-            #os.seteuid(new_uid)    # Not needed. setuid sets also the effective UID
-        except KeyError:
-            raise UserError('User not found: %s' % user)
+    """The current process drops root privileges and runs as user/group.
     
+    Create a user with:
     
-
-
-# TODO: logfile should change permissions
+        groupadd -r tinyids
+        useradd -r -g tinyids tinyids
+    
+    If the process is not run as root, then this function does nothing.
+    
+    """
+    if os.getuid() != 0:
+        return
+    
+    # Get the UID/GID for the provided used/group
+    new_gid = grp.getgrnam(group)[2]
+    new_uid = pwd.getpwnam(user)[2]
+    
+    # The new GID should be set first
+    try:
+        os.setgid(new_gid)
+    except KeyError:
+        raise UserError('Group not found: %s' % group)
+    
+    # Then the new UID
+    try:
+        os.setuid(new_uid)
+    except KeyError:
+        raise UserError('User not found: %s' % user)
 
