@@ -6,7 +6,6 @@ import logging
 import base64
 
 from TinyIDS import database
-from TinyIDS import info
 from TinyIDS import config
 from TinyIDS import rsa
 from TinyIDS import util
@@ -19,6 +18,10 @@ class DataDecryptionError(Exception):
     pass
 
 
+class InternalServerError(Exception):
+    pass
+
+
 class TinyIDSServer(SocketServer.ThreadingTCPServer):
     
     def __init__(self, server_address, RequestHandlerClass):
@@ -27,35 +30,55 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
         Extra instance attributes:
         
         cfg - the server ConfigParser instance
+        db - database.HashDatabase instance
         private_key - if PKI is enabled (use_keys = 1), then this should hold
         the private key. Otherwise should be None
         
         """
+        # Server Configuration
         self.cfg = config.get_server_configuration()
+        
+        # Hash Database
+        db_path = self.cfg.get_or_default('main', 'db_path', config.DEFAULT_DATABASE_PATH)
+        self.db = database.HashDatabase(db_path)
+        
+        # Server Private Key
         self.private_key = None
         
-        SocketServer.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass)
+        try:
+            SocketServer.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass)
+        except InternalServerError:
+            self.server_forced_shutdown()
+            raise InternalServerError
         
-    def _database_activate(self):
-        self.db = database.HashDatabase()
-        logger.debug('Hash database initialized')
+    def database_activate(self):
+        try:
+            self.db.database_activate()
+        except database.InitializationError, strerror:
+            logger.error('Database initialization error: %s' % strerror)
+            raise InternalServerError
+        logger.info('Hash database activated')
     
-    def _database_close(self):
-        self.db.close()
-        logger.debug('Hash database closed')
+    def database_close(self):
+        if self.db is not None:
+            self.db.database_close()
+            logger.info('Hash database closed')
     
     def server_activate(self):
-        logger.debug('TinyIDS Server v%s starting...' % info.version)
-        self._database_activate()
+        self.database_activate()
         self._load_or_create_keys()
         SocketServer.ThreadingTCPServer.server_activate(self)
         logger.debug('Accepting connections on %s:%s' % self.server_address)
-    
+        
     def server_close(self):
-        logger.debug('Server shutting down')
-        self._database_close()
+        logger.info('TinyIDS Server preparing for shutdown...')
+        self.database_close()
         SocketServer.ThreadingTCPServer.server_close(self)
-        logger.debug('Server terminated')
+    
+    def server_forced_shutdown(self):
+        logger.warning('Forced shutdown')
+        self.server_close()
+        logger.info('Forced shutdown complete')
         
     def verify_request(self, request, client_address):
         """TODO: IP-based access control."""

@@ -1,12 +1,13 @@
 
 import os
 import anydbm
+import logging
 
 from TinyIDS.util import sha1sum
 
 
-DEFAULT_DATABASE_PATH = 'tinyids.db'
-
+class InitializationError(Exception):
+    pass
 
 class HashDoesNotExistError(Exception):
     pass
@@ -15,21 +16,25 @@ class InvalidPassphraseError(Exception):
     pass
 
 
-
-
 class HashDatabase:
-    """
+    """Implements a database object, where hashes and passphrases are stored
+    for each client IP address.
+    
     Records are of the format:
     
     <client_ip> : <hash>____<passhphrase_crypted>
     
     """
+    def __init__(self, path):
+        """Database object constructor.
+        
+        Accepts a path to the database on the filesystem.
+        
+        """
+        self.path = os.path.abspath(path)
+        self.db = None
     
-    def __init__(self, path=None):
-        if not path:
-            path = DEFAULT_DATABASE_PATH
-        path = os.path.abspath(path)
-        self.db = anydbm.open(path, 'c', 0600)
+    # Private API
     
     def _get_crypted_passphrase(self, client_ip, passphrase_raw):
         """Encrypts the raw passphrase.
@@ -64,7 +69,9 @@ class HashDatabase:
         
         """
         self.db[client_ip] = '%s____%s' % (hash, passphrase)
-        
+    
+    # Public API
+    
     def get(self, client_ip):
         """Returns the stored hash for the client IP or Nonee if there is
         no hash stored for the client IP."""
@@ -117,8 +124,25 @@ class HashDatabase:
         for k, v in self.db.iteritems():
             print k, '\t', repr(v)
         print '-'*40
+    
+    def database_activate(self):
+        """Opens the database or creates it if it does not exist.
+        
+        On sucess sets the instance attribute: self.db
+        On error InitializationError is raised.
+        
+        """
+        try:
+            self.db = anydbm.open(self.path, 'c', 0600)
+        except anydbm.error, (errno, strerror):
+            self.db = None
+            raise InitializationError(strerror)
+    
+    def database_close(self):
+        """Closes the database."""
+        if self.db is not None:
+            self.db.close()
 
-    def close(self):
-        self.db.close()
+    
     
     

@@ -12,3 +12,4 @@ loglevel = debug
 use_keys = 0
 keys_dir = /etc/tinyids/keys/
 key_bits = 512
+db_path = /var/lib/tinyids/tinyids.db

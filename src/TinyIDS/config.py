@@ -3,6 +3,8 @@
 DEFAULT_SERVER_CONFIG = '/etc/tinyids/tinyidsd.conf'
 DEFAULT_CLIENT_CONFIG = '/etc/tinyids/tinyids.conf'
 DEFAULT_PORT = 10500
+DEFAULT_DATABASE_PATH = '/var/lib/tinyids/tinyids.db'
+DEFAULT_LOGFILE_PATH = '/var/log/tinyids.log'
 
 
 import os
@@ -15,12 +17,24 @@ class ConfigPathNotSetError(Exception):
 class ConfigFileNotFoundError(Exception):
     pass
 
+class InvalidDefaultError(Exception):
+    pass
+
 
 class TinyIDSConfigParser(ConfigParser.RawConfigParser):
 
     def getlist(self, section, option):
         value_list = self.get(section, option)
         return [value.strip() for value in value_list.split(',') if value.strip()]
+    
+    def get_or_default(self, section, option, default):
+        if not isinstance(default, str):
+            raise InvalidDefaultError
+        value = self.get(section, option)
+        if not value:
+            value = default
+        return value
+    
     
 
 def get_client_configuration(path=None):

@@ -27,7 +27,8 @@ import logging
 from TinyIDS import applogger
 from TinyIDS import cmdline
 from TinyIDS import config
-from TinyIDS.server import TinyIDSServer, TinyIDSCommandHandler
+from TinyIDS import info
+from TinyIDS.server import TinyIDSServer, TinyIDSCommandHandler, InternalServerError
 from TinyIDS.client import TinyIDSClient
 
 
@@ -74,5 +75,27 @@ def server_main():
         sys.exit(1)
     interface = cfg.get('main', 'interface')
     port = cfg.getint('main', 'port')
-    server = TinyIDSServer((interface, port), TinyIDSCommandHandler)
-    server.serve_forever()
+    
+    logger.info('TinyIDS Server v%s starting...' % info.version)
+    try:
+        service = TinyIDSServer((interface, port), TinyIDSCommandHandler)
+    except InternalServerError:
+        logger.debug('Terminated')
+    else:
+        try:
+            service.serve_forever()
+        except KeyboardInterrupt:
+            logger.warning('Caught keyboard interrupt')
+            service.server_forced_shutdown()
+        except:
+            import traceback
+            exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+            message = traceback.format_exception_only(exceptionType, exceptionValue)[0]
+            logger.critical('unhandled exception: %s' % message.strip())
+            service.server_forced_shutdown()
+            print '-'*70
+            traceback.print_exc()
+            print '-'*70
+        else:
+            logger.info('Server shutdown complete')
+
