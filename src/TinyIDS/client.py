@@ -26,12 +26,11 @@ import glob
 import socket
 import logging
 import getpass
-import base64
 
 import TinyIDS.backends
 from TinyIDS import config
-from TinyIDS.util import sha1, load_backend, import_key_from_file
-from TinyIDS import rsa
+from TinyIDS import crypto
+from TinyIDS.util import sha1, load_backend
 
 
 logger = logging.getLogger('main')
@@ -48,19 +47,27 @@ class TinyIDSClient:
     """A client implementation of the TinyIDS protocol."""
     
     cmd_end = '\r\n'
-    max_response_len = 1024
+    max_response_len = 10240
     
     def __init__(self, command):
+        
         self.command = command  # TEST | CHECK | UPDATE | DELETE | CHANGEPHRASE
         self.hasher = sha1()
         self.cfg = config.get_client_configuration()
+        
+        # PKI Module
+        _keys_dir = self.cfg.get('main', 'keys_dir')
+        self.pki = crypto.RSAModule(_keys_dir)
+        
         # This is socket.socket object while connected to server
         # Should be set to None as soon the connection is closed
         # or a socket error occurs.
         self.sock = None
+        
         # Should hold the name of the server as long as there is a
         # valid connection to it.
         self.server_name = None
+        
         logger.debug('client initialized')
     
     def _close_socket(self):
@@ -95,39 +102,22 @@ class TinyIDSClient:
                 enabled_servers.append(section)
         return enabled_servers
     
-    def _encrypt_data(self, data_raw, public_key):
-        try:
-            data_enc = rsa.encrypt(data_raw, public_key)
-        except:
-            raise DataEncryptionError
-        data_enc_b64 = base64.b64encode(data_enc)
-        print repr(data_enc_b64)
-        return data_enc_b64
-    
-    def send(self, host, port, public_key, data):
-        if public_key is not None:
-            data = self._encrypt_data(data, public_key)
-        print repr(data)
+    def send(self, host, port, data):
+        if self.pki.public_key is not None:
+            data = self.pki.encrypt(data)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
-        logger.debug('established connection to server %s' % self.server_name)
-        logger.debug('sendind %s command to server: %s' % (self.command, self.server_name))
+        logger.info('Established connection to server: %s' % self.server_name)
         self.sock.send(data + self.cmd_end)
+        logger.info('Sent %s command to server: %s' % (self.command, self.server_name))
     
-    def _verify_response(self, response_signed_b64, public_key):
-        response_signed = base64.b64decode(response_signed_b64)
-        try:
-            return rsa.verify(response_signed, public_key)
-        except:
-            raise DataVerificationError
-    
-    def get_server_response(self, public_key):
+    def get_server_response(self):
+        
         response = self.sock.recv(self.max_response_len).strip()
         response = response.rstrip(self.cmd_end)
-        logger.debug('received response from server: %s' % self.server_name)
-        self._close_socket()
-        if public_key is not None:
-            response = self._verify_response(response, public_key)
+        logger.info('Received response from server: %s' % self.server_name)
+        if self.pki.public_key is not None:
+            response = self.pki.verify(response)
         return response.strip()
     
     def hash_data(self, data):
@@ -158,9 +148,9 @@ class TinyIDSClient:
             # Load backend
             m = load_backend(backend_dir, backend_name)
             if not hasattr(m, 'Check'):
-                logger.warning('skipping invalid backend: %s' % backend_path)
+                logger.warning('Skipping invalid backend: %s' % backend_path)
                 continue
-            logger.info('processing backend: %s' % backend_name)
+            logger.info('Processing backend: %s' % backend_name)
             for data in m.Check().run():
                 self.hash_data(data)
             
@@ -175,13 +165,13 @@ class TinyIDSClient:
                 if test not in user_defined_tests_run:
                     invalid_user_defined_tests.append(test)
             if invalid_user_defined_tests:
-                logger.warning('invalid user-defined tests: %s' % ', '.join(invalid_user_defined_tests))
+                logger.warning('Invalid user-defined tests: %s' % ', '.join(invalid_user_defined_tests))
     
     def run(self):
         
         enabled_servers = self.get_enabled_server_list()
         if not enabled_servers:
-            logger.warning('no servers configured. shutting down...')
+            logger.warning('No servers configured. shutting down...')
             self.client_close()
         
         # Decide which method to execute
@@ -202,41 +192,37 @@ class TinyIDSClient:
             port = config.DEFAULT_PORT
             if self.cfg.has_option(server, 'port'):
                 port = self.cfg.getint(server, 'port')
-            public_key = None
             if self.cfg.has_option(server, 'public_key'):
                 public_key_fname = self.cfg.get(server, 'public_key')
                 if public_key_fname:
-                    keys_dir = self.cfg.get('main', 'keys_dir')
-                    public_key_path = os.path.join(keys_dir, public_key_fname)
-                    public_key = import_key_from_file(public_key_path)
-            
+                    self.pki.load_external_public_key(public_key_fname) # sets self.pki.public_key
+                    
             # Run command on the server
             try:
-                func(host, port, public_key)
-            except socket.error, e:
-                logger.error('connection error: "%s"' % e)
-                logger.warning('skipping server: %s' % self.server_name)
-                self._close_socket()
-            except DataEncryptionError:
-                logger.error('data encryption error')
-                logger.warning('skipping server: %s' % self.server_name)
-                self._close_socket()
-            except DataVerificationError:
-                logger.error('data verification error')
-                self._close_socket()
+                func(host, port)
+            except socket.error, (errno, strerror):
+                logger.error('Connection error: \'%s\'' % strerror)
+                logger.warning('Skipping server: %s' % self.server_name)
+            except crypto.DataEncryptionError:
+                logger.warning('FAILURE: could not encrypt data for server \'%s\'. Skipping server...' % self.server_name)
+            except crypto.DataVerificationError:
+                logger.warning('FAILURE: could not verify server response')
+            
+            self._close_socket()
+            self.pki.reset()    # sets self.pki.public_key to None
         
         self.client_close()
     
-    def _communicate(self, host, port, public_key, data):
-        self.send(host, port, public_key, data)
-        response = self.get_server_response(public_key)
+    def _communicate(self, host, port, data):
+        self.send(host, port, data)
+        response = self.get_server_response()
         self._check_command_status(response)
     
     def _check_command_status(self, response):
         if response.startswith('20'):
-            logger.debug('SUCCESS: command %s complete' % self.command)
+            logger.info('SUCCESS: command %s complete' % self.command)
         else:
-            logger.warning('%s command failed with: %s' % (self.command, response))
+            logger.warning('FAILURE: %s command failed with: %s' % (self.command, response))
     
     def _get_passphrase(self, msg):
         data = ''
@@ -244,37 +230,37 @@ class TinyIDSClient:
             data = getpass.getpass('%s: ' % msg)
         return data
     
-    def _com_TEST(self, host, port, public_key):
+    def _com_TEST(self, host, port):
         """
         Syntax: TEST
         """
         data = self.command
-        self._communicate(host, port, public_key, data)
+        self._communicate(host, port, data)
         
-    def _com_CHECK(self, host, port, public_key):
+    def _com_CHECK(self, host, port):
         """
         Syntax: CHECK <hash>
         """
         data = '%s %s' % (self.command, self.get_checksum())
-        self._communicate(host, port, public_key, data)
+        self._communicate(host, port, data)
     
-    def _com_UPDATE(self, host, port, public_key):
+    def _com_UPDATE(self, host, port):
         """
         Syntax: UPDATE <hash> <passphrase>
         """
         passphrase = self._get_passphrase('Passphrase')
         data = '%s %s %s' % (self.command, self.get_checksum(), passphrase)
-        self._communicate(host, port, public_key, data)
+        self._communicate(host, port, data)
     
-    def _com_DELETE(self, host, port, public_key):
+    def _com_DELETE(self, host, port):
         """
         Syntax: DELETE <passphrase>
         """
         passphrase = self._get_passphrase('Passphrase')
         data = '%s %s' % (self.command, passphrase)
-        self._communicate(host, port, public_key, data)
+        self._communicate(host, port, data)
     
-    def _com_CHANGEPHRASE(self, host, port, public_key):
+    def _com_CHANGEPHRASE(self, host, port):
         """
         Syntax: CHANGEPHRASE <old_passphrase> <new_passphrase>
         """
@@ -286,5 +272,5 @@ class TinyIDSClient:
                 break
             logger.error('passphrases do not match. try again...')
         data = '%s %s %s' % (self.command, passphrase_old, passphrase_new)
-        self._communicate(host, port, public_key, data)
+        self._communicate(host, port, data)
 
