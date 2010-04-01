@@ -35,7 +35,7 @@ user = tinyids
 group = tinyids
 
 # Logfile path
-logfile = /var/log/tinyids.log
+logfile = /var/log/tinyidsd.log
 loglevel = debug
 
 # Security related options
