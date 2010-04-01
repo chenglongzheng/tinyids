@@ -2,24 +2,25 @@ TinyIDS
 ------------------------------------------------------------------------
 
 TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems.
-It is based on a client-server architecture. The client (tinyids) runs its
-testing backends on the local system and calculates a hash of the file
+It is based on client/server architecture. The client, tinyids, runs its
+hashing backends on the local system and calculates a hash of the file
 contents and their metadata. It then compares this hash with one that has
-been previously stored on a remote tinyidsd server. Management of the
-remotely stored hash is possible through the client's command line interface.
-Supports encrypted client-server communication using PKI.
+been previously stored on the server counterpart of TinyIDS, tinyidsd,
+which runs on a remote system. Management of the remotely stored hash is
+possible through the client's command line interface. Communication between
+the client and the server counterparts can be encrypted using RSA public
+key infrastructure (PKI).
 
-TinyIDS is written in Python and is open-source software.
+TinyIDS is written in Python and is released as open-source software under
+the terms of the Apache license version 2.
 
-Project development web site:
+You can visit the project development web site:
 
   http://www.codetrax.org/projects/tinyids
 
-Project Summary :
-	N/A
-
 Project News:
-	N/A
+
+  N/A
 
 Community Support:
 	N/A
@@ -30,7 +31,7 @@ Requirements
 
 In order to run TinyIDS you will need:
 
-- blah version (TODO)
+  blah version (TODO)
 
 
 Installation
@@ -50,9 +51,7 @@ Bugs
 
 You can view existing tickets or submit new ones (requires registration) at:
 
-	https://www.codetrax.org/projects/tinyids/report/1
-
-Bugs reported by other means than the ticket system are silently ignored.
+  http://www.codetrax.org/projects/tinyids/issues
 
 
 Support
@@ -61,7 +60,7 @@ Support
 CodeTRAX does not provide support for TinyIDS.
 You can still get community support at the Community Support Forums:
 
-	N/A
+  http://www.codetrax.org/projects/tinyids/boards
 
 
 Copyright
@@ -84,5 +83,4 @@ limitations under the License.
 
 A copy of the License exists in the product distribution; the LICENSE file.
 For copyright notes please read the NOTICE file.
-
 
