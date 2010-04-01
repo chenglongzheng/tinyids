@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 #
-#  This file is part of tinyids.
+#  This file is part of TinyIDS.
 #
-#  tinyids - 
+#  TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems. 
 #
-#  Project: https://www.codetrax.org/projects/tinyids
+#  Project development web site:
 #
-#  Copyright 2010 George Notaras <gnot [at] g-loaded.eu>, CodeTRAX.org
+#      http://www.codetrax.org/projects/tinyids
+#
+#  Copyright (c) 2010 George Notaras, G-Loaded.eu, CodeTRAX.org
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -24,8 +26,8 @@
 version = '0.1.0'
 status = 'alpha'
 name = 'tinyids'
-description = """TinyIDS is a minimal distributed Intrusion Detection System (IDS) for Unix systems."""
-long_description = """TinyIDS is a minimal distributed Intrusion Detection System (IDS) for Unix systems, written in Python. It is based on a client-server architecture. The client (tinyids) runs its testing backends on the local system and calculates a hash of the file contents and their metadata. It then compares this hash with one that has been previously stored on a remote tinyidsd server. Management of the remotely stored hash is possible through the client's command line interface. Supports encrypted client-server communications using PKI. TinyIDS is open-source software."""
+description = """TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems."""
+long_description = """TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems, written in Python. It is based on a client-server architecture. The client (tinyids) runs its testing backends on the local system and calculates a hash of the file contents and their metadata. It then compares this hash with one that has been previously stored on a remote tinyidsd server. Management of the remotely stored hash is possible through the client's command line interface. Supports encrypted client-server communications using PKI. TinyIDS is open-source software."""
 author = 'George Notaras'
 author_email = 'gnot@g-loaded.eu'
 url = 'http://www.codetrax.org/projects/tinyids'
