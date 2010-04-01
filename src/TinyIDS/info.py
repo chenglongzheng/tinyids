@@ -24,12 +24,12 @@
 version = '0.1.0'
 status = 'alpha'
 name = 'tinyids'
-description = """TinyIDS is a ..."""
-long_description = """TinyIDS is a ..."""
+description = """TinyIDS is a minimal Intrusion Detection System (IDS) for Unix systems."""
+long_description = """TinyIDS is a minimal Intrusion Detection System (IDS) for Unix systems, written in Python. It is implemented using a client-server architecture. The client (tinyids) runs its testing backends and calculates a hash of various information of the local systems files and then compares it with a hash that has been already stored on a remote tinyidsd server. Management of the remotely stored hash is possible through the client's command line interface. Supports encrypted client-server communications using PKI. TinyIDS is open-source software."""
 author = 'George Notaras'
 author_email = 'gnot@g-loaded.eu'
 url = 'http://www.codetrax.org/projects/tinyids'
-download_url = "http://www.codetrax.org/downloads/projects/" + name + "/" + name + "-" + version + ".tar.gz"
+download_url = 'http://www.codetrax.org/attachments/download/21/' + name + "-" + version + ".tar.gz"
 license = "Apache License version 2"
 
 # Automate the development status for classifiers
