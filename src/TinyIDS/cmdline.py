@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 #
-#  This file is part of <Project>
+#  This file is part of TinyIDS.
 #
-#  <Description>
+#  TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems. 
 #
-#  <Project URL>
+#  Project development web site:
 #
-#  Copyright 2010 George Notaras <gnot [at] g-loaded.eu>, CodeTRAX.org
+#      http://www.codetrax.org/projects/tinyids
+#
+#  Copyright (c) 2010 George Notaras, G-Loaded.eu, CodeTRAX.org
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -20,7 +22,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
 
 USAGE_CLIENT = """
 

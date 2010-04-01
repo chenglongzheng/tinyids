@@ -1,13 +1,15 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  This file is part of tinyids.
+#  This file is part of TinyIDS.
 #
-#  tinyids - 
+#  TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems. 
 #
-#  Project: https://www.codetrax.org/projects/tinyids
+#  Project development web site:
 #
-#  Copyright 2010 George Notaras <gnot [at] g-loaded.eu>, CodeTRAX.org
+#      http://www.codetrax.org/projects/tinyids
+#
+#  Copyright (c) 2010 George Notaras, G-Loaded.eu, CodeTRAX.org
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.

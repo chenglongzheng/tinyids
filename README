@@ -1,12 +1,19 @@
 TinyIDS
 ------------------------------------------------------------------------
 
-TinyIDS is a ...
+TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems.
+It is based on a client-server architecture. The client (tinyids) runs its
+testing backends on the local system and calculates a hash of the file
+contents and their metadata. It then compares this hash with one that has
+been previously stored on a remote tinyidsd server. Management of the
+remotely stored hash is possible through the client's command line interface.
+Supports encrypted client-server communication using PKI.
 
-... blah blah ...
+TinyIDS is written in Python and is open-source software.
 
-Project Development Site and Downloads:
-	https://www.codetrax.org/projects/tinyids
+Project development web site:
+
+  http://www.codetrax.org/projects/tinyids
 
 Project Summary :
 	N/A
