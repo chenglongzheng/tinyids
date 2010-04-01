@@ -272,5 +272,3 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
         logger.debug('%s client disconnected' % self._client())
         
         #self.server.db.dbprint()
-
-

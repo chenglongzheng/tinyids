@@ -37,33 +37,32 @@ license = "Apache License version 2"
 # Automate the development status for classifiers
 devel_status = ''
 if status == 'pre-alpha':
-	devel_status = 'Development Status :: 2 - Pre-Alpha'
+    devel_status = 'Development Status :: 2 - Pre-Alpha'
 if status == 'alpha':
-	devel_status = 'Development Status :: 3 - Alpha'
+    devel_status = 'Development Status :: 3 - Alpha'
 if status == 'beta':
-	devel_status = 'Development Status :: 4 - Beta'
+    devel_status = 'Development Status :: 4 - Beta'
 if status == 'stable':
-	devel_status = 'Development Status :: 5 - Production/Stable'
+    devel_status = 'Development Status :: 5 - Production/Stable'
 
 # For a list of classifiers check: http://www.python.org/pypi/
 # (http://pypi.python.org/pypi?:action=list_classifiers)
 
 classifiers = [
-	devel_status,
+    devel_status,
     'Environment :: No Input/Output (Daemon)',
-	'Environment :: Console',
+    'Environment :: Console',
     'Intended Audience :: Information Technology',
-	'Intended Audience :: System Administrators',
-	'License :: OSI Approved :: Apache Software License',
-	'Natural Language :: English',
-	'Operating System :: POSIX',
-	'Programming Language :: Python',
+    'Intended Audience :: System Administrators',
+    'License :: OSI Approved :: Apache Software License',
+    'Natural Language :: English',
+    'Operating System :: POSIX',
+    'Programming Language :: Python',
     'Topic :: Security',
     'Topic :: System',
     'Topic :: System :: Monitoring',
-	'Topic :: Utilities',
-	]
+    'Topic :: Utilities',
+    ]
 
 def get_version():
-	return name + ' v' + version + '/' + status
-
+    return name + ' v' + version + '/' + status

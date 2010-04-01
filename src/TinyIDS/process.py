@@ -107,7 +107,7 @@ def run_as_user(user, group):
     if os.getuid() != 0:
         return
     
-    # Get the UID/GID for the provided used/group
+    # Get the UID/GID of the provided used/group
     new_gid = grp.getgrnam(group)[2]
     new_uid = pwd.getpwnam(user)[2]
     
@@ -123,3 +123,19 @@ def run_as_user(user, group):
     except KeyError:
         raise UserError('User not found: %s' % user)
 
+
+def chown_chmod_path(path, user, group, mode):
+    """Sets permissions and ownership on path.
+    
+    This can only work only if the process has been started with root
+    privileges. If this is not the case, it does nothing.
+    
+    """
+    if os.getuid() != 0:
+        return
+
+    uid = pwd.getpwnam(user)[2]
+    gid = grp.getgrnam(group)[2]
+    
+    os.chown(path, uid, gid)
+    os.chmod(path, mode)

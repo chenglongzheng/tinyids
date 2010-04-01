@@ -156,7 +156,7 @@ class HashDatabase:
         
         """
         try:
-            self.db = anydbm.open(self.path, 'c', 0600)
+            self.db = anydbm.open(self.path, 'c', 0640)
         except anydbm.error, (errno, strerror):
             self.db = None
             raise InitializationError(strerror)

@@ -147,4 +147,3 @@ to stderr. The logfile is not used.""")
         parser.error("invalid number of arguments")
     return opts
 
-

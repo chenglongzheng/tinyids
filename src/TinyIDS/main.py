@@ -79,26 +79,42 @@ def server_main():
     port = cfg.getint('main', 'port')
     user = cfg.get('main', 'user')
     group = cfg.get('main', 'group')
+    logfile = os.path.abspath(
+        cfg.get_or_default('main', 'logfile', config.DEFAULT_LOGFILE_PATH))
+    loglevel = cfg.get_or_default('main', 'loglevel', config.DEFAULT_LOGLEVEL)
     
+    # Initialize logging
+    logger = logging.getLogger('main')
     if opts.debug:
+        # Log to stderr
         applogger.init_std_stream_loggers(level='debug')
+        logger.info('tinyidsd started in debug mode')
+        logger.info('Logging to STDERR')
     else:
-        # Drop Privileges
-        process.run_as_user(user, group)
+        # Log to file
         try:
-            applogger.init_file_logger()
+            applogger.init_file_logger(logfile, loglevel)
         except applogger.LoggerError, strerror:
             sys.stderr.write('ERROR: Logger: %s\n' % strerror)
             sys.stderr.flush()
             sys.exit(1)
     
+        # Set permissions and ownership on the logfile, if running as root
+        process.chown_chmod_path(logfile, user, group, 0600)
+        
+        logger.info('tinyidsd normal startup')
+        logger.info('Logging to file: %s' % logfile)
+    
     if not opts.debug:
+        # Drop Privileges, if running as root
+        process.run_as_user(user, group)
+    
+        # Fork into background, if running as root
         process.run_in_background()
     
-    logger = logging.getLogger('main')
-    logger.debug('Got server configuration from %s' % opts.confpath)
-    
+    logger.info('Using server configuration from %s' % opts.confpath)
     logger.info('TinyIDS Server v%s starting...' % info.version)
+    
     try:
         service = TinyIDSServer((interface, port), TinyIDSCommandHandler)
     except InternalServerError:
@@ -120,4 +136,3 @@ def server_main():
             print '-'*70
         else:
             logger.info('Server shutdown complete')
-
