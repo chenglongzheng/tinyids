@@ -24,8 +24,8 @@
 version = '0.1.0'
 status = 'alpha'
 name = 'tinyids'
-description = """TinyIDS is a minimal Intrusion Detection System (IDS) for Unix systems."""
-long_description = """TinyIDS is a minimal Intrusion Detection System (IDS) for Unix systems, written in Python. It is implemented using a client-server architecture. The client (tinyids) runs its testing backends and calculates a hash of various information of the local systems files and then compares it with a hash that has been already stored on a remote tinyidsd server. Management of the remotely stored hash is possible through the client's command line interface. Supports encrypted client-server communications using PKI. TinyIDS is open-source software."""
+description = """TinyIDS is a minimal distributed Intrusion Detection System (IDS) for Unix systems."""
+long_description = """TinyIDS is a minimal distributed Intrusion Detection System (IDS) for Unix systems, written in Python. It is based on a client-server architecture. The client (tinyids) runs its testing backends on the local system and calculates a hash of the file contents and their metadata. It then compares this hash with one that has been previously stored on a remote tinyidsd server. Management of the remotely stored hash is possible through the client's command line interface. Supports encrypted client-server communications using PKI. TinyIDS is open-source software."""
 author = 'George Notaras'
 author_email = 'gnot@g-loaded.eu'
 url = 'http://www.codetrax.org/projects/tinyids'
