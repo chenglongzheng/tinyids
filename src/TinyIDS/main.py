@@ -77,8 +77,8 @@ def server_main():
     
     interface = cfg.get('main', 'interface')
     port = cfg.getint('main', 'port')
-    user = cfg.get('main', 'user')
-    group = cfg.get('main', 'group')
+    user = cfg.get_or_default('main', 'user', '')
+    group = cfg.get_or_default('main', 'group', '')
     logfile = os.path.abspath(
         cfg.get_or_default('main', 'logfile', config.DEFAULT_LOGFILE_PATH))
     loglevel = cfg.get_or_default('main', 'loglevel', config.DEFAULT_LOGLEVEL)
@@ -100,14 +100,18 @@ def server_main():
             sys.exit(1)
     
         # Set permissions and ownership on the logfile, if running as root
-        process.chown_chmod_path(logfile, user, group, 0600)
+        if user:
+            process.chown_chmod_path(logfile, user, group, 0600)
         
         logger.info('tinyidsd normal startup')
         logger.info('Logging to file: %s' % logfile)
     
     if not opts.debug:
         # Drop Privileges, if running as root
-        process.run_as_user(user, group)
+        if user:
+            process.run_as_user(user, group)
+        else:
+            logger.warning('Server running as root. User not set.')
     
         # Fork into background, if running as root
         process.run_in_background()
