@@ -1,15 +1,52 @@
 #
-# TinyIDS Server Configuration file
+# TinyIDS Server (tinyidsd) Configuration file
+#
+# If the path to the configuration file is not specified using the --config
+# option when launching tinyidsd, the configuration file will be searched at
+# the following default locations:
+#
+#   * /etc/tinyids/tinyidsd.conf
+#   * /usr/local/etc/tinyids/tinyidsd.conf
+#
+# Lines starting with '#' or ';' are considered comments.
+#
+# For more information and help about the configuration of tinyidsd,
+# please visit the project development website at:
+#
+#     http://www.codetrax.org/projects/tinyids
 #
 
 [main]
+
+# The path to the database file.
+# The server process should have read/write permission on this location
+db_path = /var/lib/tinyids/tinyids.db
+
+# Interface and port on which the server should bind
 interface = 0.0.0.0
 port = 10500
+
+# It is recommended to create a dedicated user which will be used
+# to run tinyidsd. If you set a user/group combination here, make
+# sure they exist in the system. If the 'user' option is left blank,
+# the server will not drop privilieges and will continue to run as
+# user that launched it.
 user = tinyids
 group = tinyids
+
+# Logfile path
 logfile = /var/log/tinyids.log
 loglevel = debug
+
+# Security related options
+#
+# If 'use_keys' is enabled, then the server client communication
+# will be encrypted using public key infrastructure. Make sure
+# you distribute the server's public key to the clients.
 use_keys = 0
+
+# Directory where the keys should be searched or created if missing.
 keys_dir = /etc/tinyids/keys/
+
+# Set the bit length of the generated keys.
 key_bits = 384
-db_path = /var/lib/tinyids/tinyids.db

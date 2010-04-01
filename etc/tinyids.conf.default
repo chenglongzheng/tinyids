@@ -1,27 +1,55 @@
 #
-# TinyIDS Client Configuration file
+# TinyIDS Client (tinyids) Configuration file
+#
+# If the path to the configuration file is not specified using the --config
+# option when launching tinyids, the configuration file will be searched at
+# the following default locations:
+#
+#   * /etc/tinyids/tinyids.conf
+#   * /usr/local/etc/tinyids/tinyids.conf
+#
+# Lines starting with '#' or ';' are considered comments.
+#
+# For more information and help about the configuration of tinyidsd,
+# please visit the project development website at:
+#
+#     http://www.codetrax.org/projects/tinyids
 #
 
 [main]
+
+# Directory where custom backends exist.
 extra_backends_dir = /etc/tinyids/backends
+
+# Directory where the keys should be searched.
 keys_dir = /etc/tinyids/keys/
-# You can set which tests are run by providing a comma-delimited list of tests
-# Default test names are: binhash
-# If missing or not set, all valid tests are run.
+
+# You can set which tests are run by providing a comma-delimited list
+# of tests. If a list is not provided, all valid tests run.
+#Default test names are: binhash
 tests =
 
 #
-# Servers
+# Remote Servers Section
 #
 # Server name format by convention:
-# server__<name>
 #
-# If the 'enabled' option is missing, the server is enabled by default.
-# If the 'public_key' option is missing or empty, then keys are not used
-# when communicating with the specific server.
+#   server__<name>
 #
-[server__myserver]
-enabled = 1
-host = 127.0.0.1
-port = 10500
-#public_key = test.pub 
+# Example server configuration:
+#
+#   [server__MyRemoteTinyidsd]
+#   enabled = 1
+#   host = 127.0.0.1
+#   port = 10500
+#   public_key = remote.pub
+#
+# Notes
+#
+# * If the 'enabled' option is missing, the server entry is enabled by default.
+#   To explicitly disable a configured server, set 'enabled' to 0.
+# * Only the filename of the public key is required. The key is retrieved from
+#   the directory that has been set in the 'keys_dir' option.
+# * If the 'public_key' option is empty or not set, then the communication
+#   with the specific server will not be encrypted.
+#
