@@ -27,7 +27,7 @@ DEFAULT_SERVER_CONFIG = '/etc/tinyids/tinyidsd.conf'
 DEFAULT_CLIENT_CONFIG = '/etc/tinyids/tinyids.conf'
 DEFAULT_PORT = 10500
 DEFAULT_DATABASE_PATH = '/var/lib/tinyids/tinyids.db'
-DEFAULT_LOGFILE_PATH = '/var/log/tinyids.log'
+DEFAULT_LOGFILE_PATH = '/var/log/tinyidsd.log'
 DEFAULT_LOGLEVEL = 'info'
 
 
