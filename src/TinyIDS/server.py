@@ -44,7 +44,7 @@ class InternalServerError(Exception):
 
 class TinyIDSServer(SocketServer.ThreadingTCPServer):
     
-    def __init__(self, server_address, RequestHandlerClass):
+    def __init__(self, server_address, RequestHandlerClass, pki):
         """Constructor of the TinyIDS Server.
         
         Extra instance attributes:
@@ -61,7 +61,7 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
         self.db = database.HashDatabase(db_path)
         
         # PKI Module
-        self.pki = None
+        self.pki = pki
         
         try:
             SocketServer.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass)
@@ -83,24 +83,13 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
             logger.info('Hash database closed')
     
     def pki_activate(self):
-        if not self.cfg.getboolean('main', 'use_keys'):
-            return
-        keys_dir = self.cfg.get('main', 'keys_dir')
-        key_bits = self.cfg.getint('main', 'key_bits')
-        self.pki = crypto.RSAModule(keys_dir, key_bits=key_bits)
-        logger.info('PKI module activated')
-        if not os.path.exists(self.pki.get_private_key_path()):
-            # Create both keys if the private key is missing
-            logger.warning('Generating RSA %s-bit keypair. Please wait...' % key_bits)
-            self.pki.generate_keys()
-            logger.info('Public key saved to: %s' % self.pki.get_public_key_path())
-            logger.info('Private key saved to: %s' % self.pki.get_private_key_path())
-        self.pki.load_private_key()
-        logger.info('Server private key loaded successfully')
+        if self.pki is not None:
+            logger.info('PKI module activated')
         
     def pki_close(self):
-        self.pki = None
-        logger.info('PKI module deactivated')
+        if self.pki is not None:
+            self.pki = None
+            logger.info('PKI module deactivated')
     
     def server_activate(self):
         self.database_activate()

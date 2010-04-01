@@ -32,6 +32,7 @@ from TinyIDS import cmdline
 from TinyIDS import config
 from TinyIDS import info
 from TinyIDS import process
+from TinyIDS import crypto
 from TinyIDS.server import TinyIDSServer, TinyIDSCommandHandler, InternalServerError
 from TinyIDS.client import TinyIDSClient
 
@@ -75,6 +76,7 @@ def server_main():
         sys.stderr.flush()
         sys.exit(1)
     
+    # Settings
     interface = cfg.get('main', 'interface')
     port = cfg.getint('main', 'port')
     user = cfg.get_or_default('main', 'user', '')
@@ -82,6 +84,9 @@ def server_main():
     logfile = os.path.abspath(
         cfg.get_or_default('main', 'logfile', config.DEFAULT_LOGFILE_PATH))
     loglevel = cfg.get_or_default('main', 'loglevel', config.DEFAULT_LOGLEVEL)
+    use_keys = cfg.getboolean('main', 'use_keys')
+    keys_dir = cfg.get('main', 'keys_dir')
+    key_bits = cfg.getint('main', 'key_bits')
     
     # Initialize logging
     logger = logging.getLogger('main')
@@ -106,6 +111,31 @@ def server_main():
         logger.info('tinyidsd normal startup')
         logger.info('Logging to file: %s' % logfile)
     
+    logger.info('Using server configuration from %s' % config_path)
+    
+    # For security reason the server's PKI module is activated before the
+    # server process drops privileges.
+    pki = None
+    if use_keys:
+        pki = crypto.RSAModule(keys_dir, key_bits=key_bits)
+        if not os.path.exists(pki.get_private_key_path()):
+            # Create both keys if the private key is missing
+            if not opts.debug:
+                sys.stderr.write('Generating RSA %s-bit keypair. Please wait...\n' % key_bits)
+            logger.warning('Generating RSA %s-bit keypair. Please wait...' % key_bits)
+            pki.generate_keys()
+            if not opts.debug:
+                sys.stderr.write('Public key saved to: %s\n' % pki.get_public_key_path())
+            logger.info('Public key saved to: %s' % pki.get_public_key_path())
+            if not opts.debug:
+                sys.stderr.write('Private key saved to: %s\n' % pki.get_private_key_path())
+            logger.info('Private key saved to: %s' % pki.get_private_key_path())
+            if not opts.debug:
+                sys.stderr.write('Resuming server startup...\n')
+                sys.stderr.flush()
+        pki.load_private_key()
+        logger.info('Server private key loaded successfully')
+    
     if not opts.debug:
         # Drop Privileges, if running as root
         if user:
@@ -116,11 +146,10 @@ def server_main():
         # Fork into background, if running as root
         process.run_in_background()
     
-    logger.info('Using server configuration from %s' % config_path)
     logger.info('TinyIDS Server v%s starting...' % info.version)
     
     try:
-        service = TinyIDSServer((interface, port), TinyIDSCommandHandler)
+        service = TinyIDSServer((interface, port), TinyIDSCommandHandler, pki)
     except InternalServerError:
         logger.debug('Terminated')
     else:
