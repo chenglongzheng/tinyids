@@ -54,11 +54,12 @@ class TinyIDSConfigParser(ConfigParser.RawConfigParser):
     def get_or_default(self, section, option, default):
         if not isinstance(default, str):
             raise InvalidDefaultError
+        elif not self.has_option(section, option):
+            return default
         value = self.get(section, option)
         if not value:
             value = default
         return value
-    
     
 
 def get_client_configuration(path=None):
