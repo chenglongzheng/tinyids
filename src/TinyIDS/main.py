@@ -33,7 +33,7 @@ from TinyIDS import config
 from TinyIDS import info
 from TinyIDS import process
 from TinyIDS import crypto
-from TinyIDS.server import TinyIDSServer, TinyIDSCommandHandler, InternalServerError
+from TinyIDS.server import TinyIDSServer, TinyIDSCommandHandler, InternalServerError, TerminationSignal
 from TinyIDS.client import TinyIDSClient
 
 
@@ -158,6 +158,9 @@ def server_main():
         except KeyboardInterrupt:
             logger.warning('Caught keyboard interrupt')
             service.server_forced_shutdown()
+        except TerminationSignal:
+            service.server_close()
+            logger.info('Server shutdown complete')
         except:
             import traceback
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
@@ -169,3 +172,5 @@ def server_main():
             print '-'*70
         else:
             logger.info('Server shutdown complete')
+    logger.debug('terminated')
+

@@ -25,6 +25,7 @@
 
 import os
 import SocketServer
+import signal
 import logging
 
 from TinyIDS import database
@@ -39,6 +40,9 @@ class DataDecryptionError(Exception):
     pass
 
 class InternalServerError(Exception):
+    pass
+
+class TerminationSignal(Exception):
     pass
 
 
@@ -63,11 +67,17 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
         # PKI Module
         self.pki = pki
         
+        # Bind and activate
         try:
             SocketServer.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass)
         except InternalServerError:
             self.server_forced_shutdown()
             raise InternalServerError
+        
+        # Register signal handlers
+        signal.signal(signal.SIGTERM, self.SIGTERM_handler)
+        signal.signal(signal.SIGINT, self.SIGINT_handler)
+        signal.signal(signal.SIGHUP, self.SIGHUP_handler)
         
     def database_activate(self):
         try:
@@ -112,8 +122,23 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
         """TODO: IP-based access control."""
         return True
     
+    # Signal Handlers
     
+    def SIGTERM_handler(self, signo, frame):
+        logger.info('Caught TERM signal')
+        raise TerminationSignal
     
+    def SIGINT_handler(self, signo, frame):
+        logger.info('Caught INT signal')
+        raise TerminationSignal
+    
+    def SIGHUP_handler(self, signo, frame):
+        """Server reloads its configuration.
+        
+        Not implemented
+        
+        """
+        logger.info('Caught INT signal. Not implemented. No action taken')
 
 
 
@@ -147,7 +172,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
         }
         
         SocketServer.StreamRequestHandler.__init__(self, request, client_address, server)
-    
+
     def _client(self):
         return self.client_address[0]
     
