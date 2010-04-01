@@ -76,6 +76,7 @@ if __name__=='__main__':
             ('/etc/tinyids/backends', [
                 'etc/backends/custom.py.example',
             ]),
+            #('/etc/tinyids/backends', []),
             ('/etc/tinyids/keys', []),
             ('/var/lib/tinyids', []),
         ],
