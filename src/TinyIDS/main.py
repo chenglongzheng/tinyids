@@ -116,7 +116,7 @@ def server_main():
         # Fork into background, if running as root
         process.run_in_background()
     
-    logger.info('Using server configuration from %s' % opts.confpath)
+    logger.info('Using server configuration from %s' % config_path)
     logger.info('TinyIDS Server v%s starting...' % info.version)
     
     try:
