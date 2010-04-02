@@ -1,9 +1,11 @@
 TinyIDS Bugs
 ------------------------------------------------------------------------
 
-You can view/search existing tickets or submit new ones at:
+You can view/search existing issues at:
 
-	https://www.codetrax.org/projects/tinyids/report
+  http://www.codetrax.org/projects/tinyids/issues
 
-Bugs reported by means other than the ticket system are silently ignored.
+Report new issues by using the 'new issue' online form at:
+
+  http://www.codetrax.org/projects/tinyids/issues/new
 
