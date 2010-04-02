@@ -122,7 +122,7 @@ def server_main():
         if user:
             process.chown_chmod_path(logfile, user, group, 0600)
         
-        logger.debug('tinyidsd normal startup')
+        logger.info('tinyidsd normal startup')
         logger.debug('Logging to file: %s' % logfile)
     
     logger.debug('Using server configuration from: %s' % config_path)

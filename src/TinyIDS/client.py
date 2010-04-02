@@ -164,9 +164,9 @@ class TinyIDSClient:
     
     def _check_command_status(self, response):
         if response.startswith('20'):
-            logger.info('- SUCCESS: %s complete' % self.command)
+            logger.info('- SUCCESS: %s complete on server: %s' % (self.command, self.server_name))
         else:
-            logger.warning('- FAILURE: %s command failed with: %s' % (self.command, response))
+            logger.warning('- FAILURE: %s command on server: %s failed with: %s' % (self.command, self.server_name, response))
     
     def _get_passphrase(self, msg):
         data = ''
@@ -270,9 +270,9 @@ class TinyIDSClient:
                 logger.warning('Skipping server: %s' % self.server_name)
                 self.server_name = None
             except crypto.DataEncryptionError:
-                logger.warning('- FAILURE: could not encrypt data for server \'%s\'. Skipping server...' % self.server_name)
+                logger.warning('- FAILURE: could not encrypt data for server: %s. Skipping server...' % self.server_name)
             except crypto.DataVerificationError:
-                logger.warning('- FAILURE: could not verify server response')
+                logger.warning('- FAILURE: could not verify response from server: %s' % self.server_name)
             
             self._close_socket()
             self.pki.reset()    # sets self.pki.public_key to None
