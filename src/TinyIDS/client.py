@@ -24,9 +24,9 @@
 #
 
 import os
+import logging
 import glob
 import socket
-import logging
 import getpass
 
 import TinyIDS.backends
@@ -35,7 +35,7 @@ from TinyIDS import crypto
 from TinyIDS.util import sha1, load_backend
 
 
-logger = logging.getLogger('main')
+logger = logging.getLogger()
 
 
 class TinyIDSClient:

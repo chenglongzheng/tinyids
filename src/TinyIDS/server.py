@@ -23,17 +23,15 @@
 #  limitations under the License.
 #
 
-import os
+import logging
 import SocketServer
 import signal
-import logging
 
 from TinyIDS import database
 from TinyIDS import config
-from TinyIDS import crypto
 
 
-logger = logging.getLogger('main')
+logger = logging.getLogger()
 
 
 class DataDecryptionError(Exception):
