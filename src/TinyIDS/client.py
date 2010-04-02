@@ -67,9 +67,10 @@ class TinyIDSClient:
         """Should be called after all socket errors."""
         if isinstance(self.sock, socket.socket):
             self.sock.close()
+            if self.server_name:
+                logger.info('Closed connection with server: %s' % self.server_name)
         self.sock = None
         self.server_name = None
-    
     
         
     def _run_checks(self):
@@ -99,7 +100,7 @@ class TinyIDSClient:
             logger.info('Processing backend: %s' % backend_name)
             for data in m.Check().run():
                 self.hash_data(data)
-            logger.info('Complete')
+            logger.info('- Complete')
             
             if user_defined_tests:
                 # If the user has set a list of tests, add the test that was
@@ -139,21 +140,21 @@ class TinyIDSClient:
     def _send(self, host, port, data):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
-        logger.info('Established connection to server: %s' % self.server_name)
+        logger.info('- Established connection to server: %s' % self.server_name)
         if self.pki.public_key is not None:
             data = self.pki.encrypt(data)
-            logger.info('PKI: data encrypted')
+            logger.info('- PKI: data encrypted')
         self.sock.send(data + self.cmd_end)
-        logger.info('Sent %s command to server: %s' % (self.command, self.server_name))
+        logger.info('- Sent %s command to server: %s' % (self.command, self.server_name))
     
     def _get_server_response(self):
         
         response = self.sock.recv(self.max_response_len).strip()
         response = response.rstrip(self.cmd_end)
-        logger.info('Received response from server: %s' % self.server_name)
+        logger.info('- Received response from server: %s' % self.server_name)
         if self.pki.public_key is not None:
             response = self.pki.verify(response)
-            logger.info('PKI: data verified')
+            logger.info('- PKI: data verified')
         return response.strip()
     
     def _communicate(self, host, port, data):
@@ -163,9 +164,9 @@ class TinyIDSClient:
     
     def _check_command_status(self, response):
         if response.startswith('20'):
-            logger.info('SUCCESS: %s complete' % self.command)
+            logger.info('- SUCCESS: %s complete' % self.command)
         else:
-            logger.warning('FAILURE: %s command failed with: %s' % (self.command, response))
+            logger.warning('- FAILURE: %s command failed with: %s' % (self.command, response))
     
     def _get_passphrase(self, msg):
         data = ''
@@ -267,10 +268,11 @@ class TinyIDSClient:
             except socket.error, (errno, strerror):
                 logger.error('Connection error: \'%s\'' % strerror)
                 logger.warning('Skipping server: %s' % self.server_name)
+                self.server_name = None
             except crypto.DataEncryptionError:
-                logger.warning('FAILURE: could not encrypt data for server \'%s\'. Skipping server...' % self.server_name)
+                logger.warning('- FAILURE: could not encrypt data for server \'%s\'. Skipping server...' % self.server_name)
             except crypto.DataVerificationError:
-                logger.warning('FAILURE: could not verify server response')
+                logger.warning('- FAILURE: could not verify server response')
             
             self._close_socket()
             self.pki.reset()    # sets self.pki.public_key to None
