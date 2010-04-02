@@ -234,6 +234,7 @@ class TinyIDSClient:
         if not enabled_servers:
             logger.warning('No servers configured. Shutting down...')
             self.client_close()
+        logger.info('Servers found. Proceeding with data hashing...')
         
         # Decide which method to execute
         func = getattr(self, '_com_%s' % self.command)
