@@ -180,6 +180,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
         if self.server.pki is not None:
             # PKI is enabled
             data = self.server.pki.decrypt(data)
+            logger.info('PKI: data decrypted')
         return data
     
     def _verify_grammar(self, data):
@@ -258,6 +259,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
         if sign and self.server.pki is not None:
             # PKI is enabled
             msg = self.server.pki.sign(msg)
+            logger.info('PKI: data signed')
         
         self.wfile.write(msg + self.cmd_end)
         logger.info('Sent response to %s' % self._client())
