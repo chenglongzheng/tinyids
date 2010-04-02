@@ -56,7 +56,7 @@ def main():
     else:
         applogger.init_std_stream_loggers()
     
-    logger.debug('Using client configuration from %s' % config_path)
+    logger.debug('Using client configuration from: %s' % config_path)
     logger.debug('Logging to standard streams: STDOUT, STDERR')
     
     command = None
@@ -107,8 +107,8 @@ def server_main():
     if opts.debug:
         # Log to stderr
         applogger.init_std_stream_loggers(verbose=True)
-        logger.info('tinyidsd started in debug mode')
-        logger.info('Logging to standard streams: STDOUT, STDERR')
+        logger.debug('tinyidsd started in debug mode')
+        logger.debug('Logging to standard streams: STDOUT, STDERR')
     else:
         # Log to file
         try:
@@ -122,10 +122,10 @@ def server_main():
         if user:
             process.chown_chmod_path(logfile, user, group, 0600)
         
-        logger.info('tinyidsd normal startup')
-        logger.info('Logging to file: %s' % logfile)
+        logger.debug('tinyidsd normal startup')
+        logger.debug('Logging to file: %s' % logfile)
     
-    logger.info('Using server configuration from %s' % config_path)
+    logger.debug('Using server configuration from: %s' % config_path)
     
     # For security reason the server's PKI module is activated before the
     # server process drops privileges.
