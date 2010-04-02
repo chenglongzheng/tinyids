@@ -63,17 +63,14 @@ class TinyIDSClient:
         # valid connection to it.
         self.server_name = None
         
-        logger.debug('client initialized')
-    
     def _close_socket(self):
-        """Should be called after socket errors."""
+        """Should be called after all socket errors."""
         if isinstance(self.sock, socket.socket):
             self.sock.close()
         self.sock = None
         self.server_name = None
     
-    def _client_close(self):
-        logger.debug('client closing')
+    
         
     def _run_checks(self):
         backends = []
@@ -102,6 +99,7 @@ class TinyIDSClient:
             logger.info('Processing backend: %s' % backend_name)
             for data in m.Check().run():
                 self.hash_data(data)
+            logger.info('Complete')
             
             if user_defined_tests:
                 # If the user has set a list of tests, add the test that was
@@ -129,7 +127,7 @@ class TinyIDSClient:
                 continue
             server_name = self._get_server_canonical_name(section)
             if not self.cfg.has_option(section, 'host'):
-                logger.warning('misconfigured server: %s' % server_name)
+                logger.warning('Misconfigured server: %s' % server_name)
                 continue
             if self.cfg.has_option(section, 'enabled'):
                 is_enabled = self.cfg.getboolean(section, 'enabled')
@@ -139,11 +137,12 @@ class TinyIDSClient:
         return enabled_servers
     
     def _send(self, host, port, data):
-        if self.pki.public_key is not None:
-            data = self.pki.encrypt(data)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
         logger.info('Established connection to server: %s' % self.server_name)
+        if self.pki.public_key is not None:
+            data = self.pki.encrypt(data)
+            logger.info('PKI: data encrypted')
         self.sock.send(data + self.cmd_end)
         logger.info('Sent %s command to server: %s' % (self.command, self.server_name))
     
@@ -154,6 +153,7 @@ class TinyIDSClient:
         logger.info('Received response from server: %s' % self.server_name)
         if self.pki.public_key is not None:
             response = self.pki.verify(response)
+            logger.info('PKI: data verified')
         return response.strip()
     
     def _communicate(self, host, port, data):
@@ -163,7 +163,7 @@ class TinyIDSClient:
     
     def _check_command_status(self, response):
         if response.startswith('20'):
-            logger.info('SUCCESS: command %s complete' % self.command)
+            logger.info('SUCCESS: %s complete' % self.command)
         else:
             logger.warning('FAILURE: %s command failed with: %s' % (self.command, response))
     
@@ -226,24 +226,30 @@ class TinyIDSClient:
         self.hasher.update(data)
     
     def run(self):
+        """Main client method."""
         
+        logger.info('Getting list of enabled servers')
         enabled_servers = self._get_enabled_server_list()
         if not enabled_servers:
-            logger.warning('No servers configured. shutting down...')
-            self._client_close()
+            logger.warning('No servers configured. Shutting down...')
+            self.client_close()
         
         # Decide which method to execute
         func = getattr(self, '_com_%s' % self.command)
         
         # Tests are required to run only with the CHECK and UPDATE commands
         if self.command in ('CHECK', 'UPDATE'):
+            logger.info('Hashing data. Please wait...')
             self._run_checks()
+            logger.info('Hashing complete')
         
         # Execute command on server
+        logger.info('Preparing to contact servers')
         for server in enabled_servers:
             # server is in 'server__<name>' format (a section name)
             # Here we set self.server_name to the canonical server name
             self.server_name = self._get_server_canonical_name(server)
+            logger.info('Contacting server: %s' % self.server_name)
             
             # Get server settings
             host = self.cfg.get(server, 'host')
@@ -269,5 +275,10 @@ class TinyIDSClient:
             self._close_socket()
             self.pki.reset()    # sets self.pki.public_key to None
         
-        self._client_close()
+        logger.info('Finished with servers')
+        
+        self.client_close()
+    
+    def client_close(self):
+        logger.info('Client shutting down...')
 

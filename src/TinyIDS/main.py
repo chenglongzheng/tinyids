@@ -52,13 +52,12 @@ def main():
     logger = logging.getLogger()
     if opts.debug:
         applogger.init_std_stream_loggers(verbose=True)
-        logger.info('tinyids started in debug mode')
+        logger.debug('tinyids started in debug mode')
     else:
         applogger.init_std_stream_loggers()
-        logger.info('tinyidsd normal startup')
     
-    logger.info('Logging to standard streams: STDOUT, STDERR')
-    logger.info('Using server configuration from %s' % config_path)
+    logger.debug('Using client configuration from %s' % config_path)
+    logger.debug('Logging to standard streams: STDOUT, STDERR')
     
     command = None
     if opts.test:
@@ -71,10 +70,14 @@ def main():
         command = 'DELETE'
     elif opts.changephrase:
         command = 'CHANGEPHRASE'
-    logger.info('Running in mode: TEST' % command)
     
     client = TinyIDSClient(command)
+    logger.info('TinyIDS Client v%s initialized' % info.version)
+    logger.info('Running in mode: %s' % command)
+    
     client.run()
+
+    logger.debug('terminated')
 
 
 def server_main():
