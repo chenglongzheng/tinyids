@@ -27,7 +27,6 @@ import os
 import socket
 import pickle
 import base64
-import zlib
 
 from TinyIDS import rsa
 
