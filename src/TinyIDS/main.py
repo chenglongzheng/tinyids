@@ -40,17 +40,26 @@ from TinyIDS.client import TinyIDSClient
 
 def main():
     opts = cmdline.parse_client()
+    config_path = os.path.abspath(opts.confpath)
+    try:
+        cfg = config.get_client_configuration(config_path)
+    except config.ConfigFileNotFoundError:
+        sys.stderr.write('ERROR: Configuration file not found: %s\n' % config_path)
+        sys.stderr.flush()
+        sys.exit(1)
+    
+    # Initialize logging
+    logger = logging.getLogger()
     if opts.debug:
-        applogger.init_std_stream_loggers(level='debug')
+        applogger.init_std_stream_loggers(verbose=True)
+        logger.info('tinyids started in debug mode')
     else:
         applogger.init_std_stream_loggers()
-    logger = logging.getLogger('main')
-    logger.debug('Getting client configuration from %s' % opts.confpath)
-    try:
-        cfg = config.get_client_configuration(opts.confpath)
-    except config.ConfigFileNotFoundError:
-        logger.critical('Configuration file not found. exiting...')
-        sys.exit(1)
+        logger.info('tinyidsd normal startup')
+    
+    logger.info('Logging to standard streams: STDOUT, STDERR')
+    logger.info('Using server configuration from %s' % config_path)
+    
     command = None
     if opts.test:
         command = 'TEST'
@@ -62,6 +71,8 @@ def main():
         command = 'DELETE'
     elif opts.changephrase:
         command = 'CHANGEPHRASE'
+    logger.info('Running in mode: TEST' % command)
+    
     client = TinyIDSClient(command)
     client.run()
 
@@ -89,12 +100,12 @@ def server_main():
     key_bits = cfg.getint('main', 'key_bits')
     
     # Initialize logging
-    logger = logging.getLogger('main')
+    logger = logging.getLogger()
     if opts.debug:
         # Log to stderr
-        applogger.init_std_stream_loggers(level='debug')
+        applogger.init_std_stream_loggers(verbose=True)
         logger.info('tinyidsd started in debug mode')
-        logger.info('Logging to STDERR')
+        logger.info('Logging to standard streams: STDOUT, STDERR')
     else:
         # Log to file
         try:
