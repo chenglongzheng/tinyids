@@ -23,6 +23,8 @@
 #  limitations under the License.
 #
 
+PROTOCOL_VERSION = 1
+PROTOCOL_COMPATIBILITY = (1,)
 DEFAULT_SERVER_CONFIG = '/etc/tinyids/tinyidsd.conf'
 DEFAULT_CLIENT_CONFIG = '/etc/tinyids/tinyids.conf'
 DEFAULT_PORT = 10500
