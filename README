@@ -20,43 +20,32 @@ You can visit the project development web site:
 
 Project News:
 
-  N/A
-
-Community Support:
-	N/A
+  http://www.codetrax.org/projects/tinyids/news
 
 
 Requirements
-============
-
+------------
 In order to run TinyIDS you will need:
 
-  blah version (TODO)
+ - Python (http://python.org/)
 
 
-Installation
-============
+User Guide
+----------
+For all information regarding the installation, configuration, usage and
+automation of TinyIDS, please read the online user guide at:
 
-For installation instructions please read the INSTALL file.
-
-
-Configuration
-=============
-
-TODO
+  http://www.codetrax.org/projects/tinyids/wiki/Guide
 
 
 Bugs
-====
-
-You can view existing tickets or submit new ones (requires registration) at:
-
-  http://www.codetrax.org/projects/tinyids/issues
+----
+For information about viewing or searching current bugs or about submitting
+new ones, please read the BUGS file.
 
 
 Support
-=======
-
+-------
 CodeTRAX does not provide support for TinyIDS.
 You can still get community support at the Community Support Forums:
 
@@ -64,14 +53,12 @@ You can still get community support at the Community Support Forums:
 
 
 Copyright
-=========
-
-Copyright 2010 George Notaras <gnot [at] g-loaded.eu>, CodeTRAX.org
+---------
+Copyright 2010 George Notaras <gnot@g-loaded.eu>, CodeTRAX.org
 
 
 License
-=======
-
+-------
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 
