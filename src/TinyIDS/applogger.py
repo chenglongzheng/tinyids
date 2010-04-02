@@ -121,8 +121,8 @@ def init_std_stream_loggers(verbose=False, quiet=False):
     stdout_handler.addFilter(StdoutFilter(quiet))
 
     # Add formatter to both STDOUT & STDERR handlers
-    stderr_handler.setFormatter(FORMATTER_NORMAL)
-    stdout_handler.setFormatter(FORMATTER_NORMAL)
+    stderr_handler.setFormatter(FORMATTER_DETAIL)
+    stdout_handler.setFormatter(FORMATTER_DETAIL)
 
     # Add the stream handlers to the main logger
     logger.addHandler(stderr_handler)
