@@ -23,8 +23,8 @@
 #  limitations under the License.
 #
 
-version = '0.1.0'
-status = 'alpha'
+version = '0.1.1'
+status = 'beta'
 name = 'tinyids'
 description = """TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems."""
 long_description = """TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems. It is based on client/server architecture. The client, tinyids, runs its hashing backends on the local system and calculates a hash of the file contents and their metadata. It then compares this hash with one that has been previously stored on the server counterpart of TinyIDS, tinyidsd, which runs on a remote system. Management of the remotely stored hash is possible through the client's command line interface. Communication between the client and the server counterparts can be encrypted using RSA public key infrastructure (PKI). TinyIDS is written in Python and is released as open-source software under the terms of the Apache license version 2."""
