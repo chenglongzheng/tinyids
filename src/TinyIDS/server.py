@@ -136,7 +136,7 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
         Not implemented
         
         """
-        logger.info('Caught INT signal. Not implemented. No action taken')
+        logger.info('Caught HUP signal. Not implemented. No action taken')
 
 
 
