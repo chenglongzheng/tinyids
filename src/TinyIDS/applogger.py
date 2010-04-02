@@ -128,7 +128,7 @@ def init_std_stream_loggers(verbose=False, quiet=False):
     logger.addHandler(stderr_handler)
     logger.addHandler(stdout_handler)
 
-    logger.debug('Standard stream loggers initialized successfully')
+    #logger.debug('Logging to standard streams: STDOUT, STDERR')
 
 
 def init_file_logger(path, level):
@@ -155,5 +155,5 @@ def init_file_logger(path, level):
         file_handler.setLevel(DEFAULT_LOGLEVELS[level])
         logger.addHandler(file_handler)
         
-        logger.debug('Logging to file initialized successfully')
+        #logger.debug('Logging to file: %s' % path)
 
