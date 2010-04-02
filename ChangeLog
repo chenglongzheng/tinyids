@@ -1,7 +1,41 @@
 TinyIDS Changelog
 ------------------------------------------------------------------------
 
+0.1.0 -> 0.1.1
+
+Released on Fri, Apr 2 2010
+First beta release
+
+* Bug #147: Logger messages need improvement
+* Bug #179: Client should notify about connection
+* Bug #223: Client should not print info messages to stderr
+* Feature #221: Add backend that checks stat info of files in bin directories
+
+
 0.0.0 -> 0.1.0
 
-* Initial public alpha release
+Released on Thu, Apr 1 2010
+Initial public alpha release
+
+* Bug #146: Refactor the hash database code
+* Bug #149: Refactor crypto related code in server and client to improve readability
+* Bug #151: Refactor server and client code to separate the private from the public api
+* Bug #155: License information about the rsa module is missing
+* Bug #159: Test keys should be removed from the distribution
+* Bug #160: Default key_bits should be 384
+* Bug #161: License information missing from several source code files
+* Bug #164: Resolve the situation in which the process is not allowed to write to log
+* Bug #169: The key generation should be performed by the root process
+* Bug #172: Consider renaming the key_bits option to key_length
+* Bug #174: Do not drop privileges if user is not set in the server config
+* Feature #142: Implement client-server communication using PKI
+* Feature #143: Make first public alpha release
+* Feature #144: Add a test keypair
+* Feature #145: Run as a background process
+* Feature #148: Fill project information in the info module
+* Feature #150: Keys should be saved in a custom format or in a standard format
+* Feature #156: Initial Code
+* Feature #165: The process should be able to handle signals
+* Feature #167: Improve configuration file layout and included information
+* Feature #168: Implement a function that can set the owner of of files and directories to the server user
 
