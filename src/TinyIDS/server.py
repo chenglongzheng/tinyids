@@ -53,6 +53,13 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
         
         cfg - the server ConfigParser instance
         db - database.HashDatabase instance
+        pki - crypto.RSAModule instance
+        
+        Security Considerations
+        
+        If PKI module has been enabled, the server's private key should
+        have been loaded before dropping privileges, so that the server
+        process does not have read access to it while operating.
         
         """
         # Server Configuration
