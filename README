@@ -1,7 +1,10 @@
-TinyIDS
+TinyIDS README
+
+Introduction to TinyIDS
 ------------------------------------------------------------------------
 
 TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems.
+
 It is based on client/server architecture. The client, tinyids, runs its
 hashing backends on the local system and calculates a hash of the file
 contents and their metadata. It then compares this hash with one that has
@@ -54,7 +57,7 @@ You can still get community support at the Community Support Forums:
 
 Copyright
 ---------
-Copyright 2010 George Notaras <gnot@g-loaded.eu>, CodeTRAX.org
+Copyright 2010 George Notaras, G-Loaded.eu, CodeTRAX.org
 
 
 License
