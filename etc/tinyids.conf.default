@@ -18,6 +18,9 @@
 
 [main]
 
+# Directory that contains configuration files for collector backends
+backends_conf_dir = /etc/tinyids/backends.conf.d
+
 # Directory where custom backends exist.
 extra_backends_dir = /etc/tinyids/backends
 
