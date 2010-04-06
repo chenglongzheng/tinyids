@@ -80,6 +80,7 @@ if __name__=='__main__':
             #    'contrib/tinyids.cron',
             #]),
             #('/etc/tinyids/backends', []),
+            ('/etc/tinyids/backends.conf.d', []),
             ('/etc/tinyids/keys', []),
             ('/var/lib/tinyids', []),
         ],
