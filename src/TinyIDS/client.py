@@ -281,7 +281,6 @@ class TinyIDSClient:
         # Tests are required to run only with the CHECK and UPDATE commands
         if self.command in ('CHECK', 'UPDATE'):
             logger.info('Hashing data. Please wait...')
-            #self._run_checks()
             try:
                 self._run_backends()
             except NoBackendsToRun:
