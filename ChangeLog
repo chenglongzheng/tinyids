@@ -1,6 +1,22 @@
 TinyIDS Changelog
 ------------------------------------------------------------------------
 
+
+0.1.1 -> 0.1.2
+
+Released on Tue, Apr 6 2010
+Status is alpha again due to the many new features
+
+* Bug #230: The client's message about the result of the command should be more consistent
+* Bug #231: Still contacts servers even if no backends have run
+* Feature #153: Define the backend API
+* Feature #154: Write README document and other supplemental files
+* Feature #180: Add a sample cronjob for running the client
+* Feature #222: Consider naming the backend main class: Collector
+* Feature #229: Add delay feature to hashing backends
+* Feature #232: Separate configuration for each backend
+
+
 0.1.0 -> 0.1.1
 
 Released on Fri, Apr 2 2010
