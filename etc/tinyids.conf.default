@@ -29,6 +29,11 @@ keys_dir = /etc/tinyids/keys/
 #Default test names are: binhash
 tests =
 
+# Hashing delay. This is the time in milliseconds tinyids should wait between
+# two consequent hashing operations. This feature exists in order to reduce
+# the disk I/O operations per second.
+hashing_delay = 10
+
 #
 # Remote Servers Section
 #

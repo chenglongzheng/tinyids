@@ -28,6 +28,7 @@ import logging
 import glob
 import socket
 import getpass
+import time
 
 import TinyIDS.backends
 from TinyIDS import config
@@ -49,6 +50,9 @@ class TinyIDSClient:
         self.command = command  # TEST | CHECK | UPDATE | DELETE | CHANGEPHRASE
         self.hasher = sha1()
         self.cfg = config.get_client_configuration()
+        
+        # Default hashing delay
+        self.default_hashing_delay = self._get_hashing_delay()
         
         # PKI Module
         _keys_dir = self.cfg.get('main', 'keys_dir')
@@ -72,6 +76,12 @@ class TinyIDSClient:
         self.sock = None
         self.server_name = None
     
+    def _get_hashing_delay(self):
+        """Returns the hashing delay in seconds."""
+        delay_msec = self.default_hashing_delay = self.cfg.getfloat('main', 'hashing_delay')
+        delay_sec = delay_msec / 1000
+        logger.debug('Hashing delay set to %.3f seconds' % delay_sec)
+        return delay_sec
         
     def _run_checks(self):
         backends = []
@@ -225,6 +235,7 @@ class TinyIDSClient:
     
     def hash_data(self, data):
         self.hasher.update(data)
+        time.sleep(self.default_hashing_delay)
     
     def run(self):
         """Main client method."""
