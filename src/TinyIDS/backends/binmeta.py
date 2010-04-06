@@ -23,6 +23,7 @@
 #  limitations under the License.
 #
 
+import sys
 import os
 
 from TinyIDS.collector import BaseCollector
@@ -39,6 +40,7 @@ class CollectorBackend(BaseCollector):
 
 if __name__ == '__main__':
     for data in CollectorBackend().collect():
-        print data
+        sys.stdout.write(data)
+    sys.stdout.flush()
 
 
