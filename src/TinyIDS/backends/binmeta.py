@@ -23,39 +23,22 @@
 #  limitations under the License.
 #
 
-import sys
 import os
-import glob
 
-class Check:
-    name = 'Binary Hash'
+from TinyIDS.collector import BaseCollector
+
+
+class CollectorBackend(BaseCollector):
     
-    paths = (
-        '/usr/local/sbin',
-        '/usr/local/bin',
-        '/sbin',
-        '/bin',
-        '/usr/sbin',
-        '/usr/bin',
-        '/root/bin',
-    )
-    
-    def run(self):
-        for path in self.paths:
-            glob_exp = os.path.join(path, '*')
-            #print 'checking: %s' % glob_exp
-            flist = glob.glob(glob_exp)
-            for fpath in flist:
-                if os.path.isfile(fpath):   # Follows symbolic links
-                    #print 'checking: %s' % fpath
-                    fst = os.stat(fpath)
-                    data = '%s %s %s %s %s %s %s\n' % (fpath, fst.st_mode, fst.st_ino, fst.st_uid, fst.st_gid, fst.st_size, fst.st_mtime)
-                    yield data
+    def collect(self):
+        for path in self.file_paths():
+            #print 'checking: %s' % path
+            fst = os.stat(path)
+            data = '%s %s %s %s %s %s %s\n' % (path, fst.st_mode, fst.st_ino, fst.st_uid, fst.st_gid, fst.st_size, fst.st_mtime)
+            yield data
 
 if __name__ == '__main__':
-    for data in Check().run():
-        sys.stdout.write(data)
-    sys.stdout.flush()
-
+    for data in CollectorBackend().collect():
+        print data
 
 
