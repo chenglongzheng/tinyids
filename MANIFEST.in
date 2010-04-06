@@ -13,4 +13,5 @@ include scripts/tinyidsd
 include etc/tinyids.conf.default
 include etc/tinyidsd.conf.default
 include etc/backends/custom.py.example
+include contrib/tinyids.cron
 recursive-include src/TinyIDS *.py

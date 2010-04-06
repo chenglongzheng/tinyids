@@ -76,6 +76,9 @@ if __name__=='__main__':
             ('/etc/tinyids/backends', [
                 'etc/backends/custom.py.example',
             ]),
+            #('/etc/cron.d', [
+            #    'contrib/tinyids.cron',
+            #]),
             #('/etc/tinyids/backends', []),
             ('/etc/tinyids/keys', []),
             ('/var/lib/tinyids', []),

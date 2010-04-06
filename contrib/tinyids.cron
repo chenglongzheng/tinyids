@@ -1,0 +1,5 @@
+#
+# Run TinyIDS Client
+#
+#15 4 * * * root ionice -c2 -n7 /usr/bin/tinyids --check 2>&1 | /bin/mail -s "`hostname` - TinyIDS Client Report" root@localhost
+#15 16 * * * root ionice -c2 -n7 /usr/bin/tinyids --check 2>&1 | /bin/mail -s "`hostname` - TinyIDS Client Report" root@localhost
