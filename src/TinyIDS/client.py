@@ -39,6 +39,10 @@ from TinyIDS.util import sha1, load_backend
 logger = logging.getLogger()
 
 
+class NoBackendsToRun(Exception):
+    pass
+
+
 class TinyIDSClient:
     """A client implementation of the TinyIDS protocol."""
     
@@ -82,48 +86,61 @@ class TinyIDSClient:
         delay_sec = delay_msec / 1000
         logger.debug('Hashing delay set to %.3f seconds' % delay_sec)
         return delay_sec
-        
-    def _run_checks(self):
-        backends = []
+    
+    def _run_backends(self):
+        # Get a list of all backend paths
+        backend_paths = []
         core_backends_dir = TinyIDS.backends.__path__[0]
-        backends.extend(glob.glob(os.path.join(core_backends_dir, '*.py')))
+        backend_paths.extend(glob.glob(os.path.join(core_backends_dir, '*.py')))
         extra_backends_dir = self.cfg.get('main', 'extra_backends_dir')
-        backends.extend(glob.glob(os.path.join(extra_backends_dir, '*.py')))
-        user_defined_tests = self.cfg.getlist('main', 'tests')
+        backend_paths.extend(glob.glob(os.path.join(extra_backends_dir, '*.py')))
         
-        # Holds the user-defined tests that have been run
-        user_defined_tests_run = []
+        if not backend_paths:
+            raise NoBackendsToRun
         
-        for backend_path in backends:
+        # 
+        user_defined_backend_list = self.cfg.getlist('main', 'tests')
+        user_defined_backend_list_finished = [] # holds names of backends that have finished
+        if user_defined_backend_list:
+            logger.debug('Using user-defined list of backends')
+        
+        # Load all needed backends and store them in a list
+        for backend_path in backend_paths:
             backend_name = os.path.basename(backend_path)[:-3]
             backend_dir = os.path.dirname(backend_path)
             if backend_name == '__init__':
                 continue
-            elif user_defined_tests:
-                if not backend_name in user_defined_tests:
+            elif user_defined_backend_list:
+                #print "checking user list"
+                if not backend_name in user_defined_backend_list:
+                    logger.debug('Skipping backend: %s' % backend_name)
                     continue
             # Load backend
             m = load_backend(backend_dir, backend_name)
             if not hasattr(m, 'Check'):
                 logger.warning('Skipping invalid backend: %s' % backend_path)
                 continue
+            # Run backend
             logger.info('Processing backend: %s' % backend_name)
             for data in m.Check().run():
                 self.hash_data(data)
             logger.info('- Complete')
             
-            if user_defined_tests:
-                # If the user has set a list of tests, add the test that was
-                # run to the list that keeps track of which tests have been run
-                user_defined_tests_run.append(backend_name)
+            if user_defined_backend_list:
+                # If a user-defined list of backends is used, add the name of
+                # the backend that has just run to the list:
+                # user_defined_backend_list_finished
+                user_defined_backend_list_finished.append(backend_name)
         
-        if user_defined_tests:
+        if user_defined_backend_list:
             invalid_user_defined_tests = []
-            for test in user_defined_tests:
-                if test not in user_defined_tests_run:
+            for test in user_defined_backend_list:
+                if test not in user_defined_backend_list_finished:
                     invalid_user_defined_tests.append(test)
             if invalid_user_defined_tests:
-                logger.warning('Invalid user-defined tests: %s' % ', '.join(invalid_user_defined_tests))
+                logger.warning('Invalid user-defined test(s): %s' % ', '.join(invalid_user_defined_tests))
+                if not user_defined_backend_list_finished:
+                    raise NoBackendsToRun
     
     def _get_server_canonical_name(self, server_name):
         """Returns the name of the server after stripping the 'server__' prefix'"""
@@ -245,6 +262,7 @@ class TinyIDSClient:
         if not enabled_servers:
             logger.warning('No servers configured. Shutting down...')
             self.client_close()
+            return
         logger.info('Servers found. Proceeding with data hashing...')
         
         # Decide which method to execute
@@ -253,8 +271,15 @@ class TinyIDSClient:
         # Tests are required to run only with the CHECK and UPDATE commands
         if self.command in ('CHECK', 'UPDATE'):
             logger.info('Hashing data. Please wait...')
-            self._run_checks()
-            logger.info('Hashing complete')
+            #self._run_checks()
+            try:
+                self._run_backends()
+            except NoBackendsToRun:
+                logger.warning('No valid backends. Shutting down...')
+                self.client_close()
+                return
+            else:
+                logger.info('Hashing complete')
         
         # Execute command on server
         logger.info('Preparing to contact servers')
