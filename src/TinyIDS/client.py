@@ -88,6 +88,9 @@ class TinyIDSClient:
         return delay_sec
     
     def _run_backends(self):
+        
+        backends_conf_dir = self.cfg.get('main', 'backends_conf_dir')
+        
         # Get a list of all backend paths
         backend_paths = []
         core_backends_dir = TinyIDS.backends.__path__[0]
@@ -117,12 +120,19 @@ class TinyIDSClient:
                     continue
             # Load backend
             m = load_backend(backend_dir, backend_name)
-            if not hasattr(m, 'Check'):
+            if not hasattr(m, 'CollectorBackend'):
                 logger.warning('Skipping invalid backend: %s' % backend_path)
                 continue
+            
+            backend_config_file = os.path.join(backends_conf_dir, m.__name__ + '.conf')
+            b = m.CollectorBackend(config_path=backend_config_file)
+            if not hasattr(b, 'collect'):
+                logger.warning('Skipping invalid backend: %s' % backend_path)
+                continue
+            
             # Run backend
             logger.info('Processing backend: %s' % backend_name)
-            for data in m.Check().run():
+            for data in b.collect():
                 self.hash_data(data)
             logger.info('- Complete')
             

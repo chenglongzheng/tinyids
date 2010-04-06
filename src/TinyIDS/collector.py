@@ -49,7 +49,7 @@ logger = logging.getLogger()
 
 class BaseCollector:
     """
-    self.config_path = os.path.join(backend_conf_dir, __name__ + '.conf')
+    TODO: write BaseCollector docstring
     """
     
     def __init__(self, config_path=None):
