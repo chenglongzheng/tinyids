@@ -159,7 +159,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
         
         # command : (<processing_method>, <number_of_args>)
         self.com2func = {
-            'TEST':         (self._com_TEST, 0),          # TEST
+            'TEST':         (self._com_TEST, 1),          # TEST <protocol_revision>
             'CHECK':        (self._com_CHECK, 1),         # CHECK <hash>
             'UPDATE':       (self._com_UPDATE, 2),        # UPDATE <hash> <passphrase>
             'DELETE':       (self._com_DELETE, 1),        # DELETE <passphrase>
@@ -213,8 +213,12 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     def _finish_command(self):
         self.doing_command = None
         
-    def _com_TEST(self):
-        self._send_response(20) # OK
+    def _com_TEST(self, protocol_rev):
+        if protocol_rev.isdigit():
+            if int(protocol_rev) in config.COMPATIBLE_PROTOCOL_REVISIONS:
+                self._send_response(20) # OK
+                return
+        self._send_response(40) # INVALID CLIENT
     
     def _com_CHECK(self, hash):
         try:

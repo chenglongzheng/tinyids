@@ -218,9 +218,9 @@ class TinyIDSClient:
     
     def _com_TEST(self, host, port):
         """
-        Syntax: TEST
+        Syntax: TEST <protocol_revision>
         """
-        data = self.command
+        data = '%s %s' % (self.command, config.PROTOCOL_REVISION)
         self._communicate(host, port, data)
         
     def _com_CHECK(self, host, port):
