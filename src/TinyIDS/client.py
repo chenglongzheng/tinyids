@@ -76,7 +76,7 @@ class TinyIDSClient:
         if isinstance(self.sock, socket.socket):
             self.sock.close()
             if self.server_name:
-                logger.info('Closed connection with server: %s' % self.server_name)
+                logger.info('- Closed connection with server: %s' % self.server_name)
         self.sock = None
         self.server_name = None
     
@@ -185,7 +185,7 @@ class TinyIDSClient:
         logger.info('- Sent %s command to server: %s' % (self.command, self.server_name))
     
     def _get_server_response(self):
-        
+        logger.info('- Awaiting server response...')
         response = self.sock.recv(self.max_response_len).strip()
         response = response.rstrip(self.cmd_end)
         logger.info('- Received response from server: %s' % self.server_name)
@@ -201,9 +201,9 @@ class TinyIDSClient:
     
     def _check_command_status(self, response):
         if response.startswith('20'):
-            logger.info('RESULT: %s on %s: SUCCESS' % (self.command, self.server_name))
+            logger.info('- RESULT: %s on %s: SUCCESS' % (self.command, self.server_name))
         else:
-            logger.warning('RESULT: %s on %s: FAILURE with error: %s' % (self.command, self.server_name, response))
+            logger.warning('- RESULT: %s on %s: FAILURE with error: %s' % (self.command, self.server_name, response))
     
     def _get_passphrase(self, msg):
         data = ''
@@ -296,7 +296,7 @@ class TinyIDSClient:
             # server is in 'server__<name>' format (a section name)
             # Here we set self.server_name to the canonical server name
             self.server_name = self._get_server_canonical_name(server)
-            logger.info('Contacting server: %s' % self.server_name)
+            logger.info('* Contacting server: %s' % self.server_name)
             
             # Get server settings
             host = self.cfg.get(server, 'host')
@@ -306,7 +306,12 @@ class TinyIDSClient:
             if self.cfg.has_option(server, 'public_key'):
                 public_key_fname = self.cfg.get(server, 'public_key')
                 if public_key_fname:
-                    self.pki.load_external_public_key(public_key_fname) # sets self.pki.public_key
+                    try:
+                        self.pki.load_external_public_key(public_key_fname) # sets self.pki.public_key
+                    except crypto.InvalidPublicKey:
+                        logger.warning('- RESULT: %s on %s: FAILURE with PKI error: invalid server public key: %s' % (self.command, self.server_name, public_key_fname))
+                        self.server_name = None
+                        continue
                     
             # Run command on the server
             try:
@@ -316,9 +321,9 @@ class TinyIDSClient:
                 logger.warning('Skipping server: %s' % self.server_name)
                 self.server_name = None
             except crypto.DataEncryptionError:
-                logger.warning('FAILURE: could not encrypt data for server: %s. Skipping server...' % self.server_name)
+                logger.warning('- RESULT: %s on %s: FAILURE with PKI error: could not encrypt data for server' % (self.command, self.server_name))
             except crypto.DataVerificationError:
-                logger.warning('FAILURE: could not verify response from server: %s' % self.server_name)
+                logger.warning('- RESULT: %s on %s: FAILURE with PKI error: could not verify response from server' % (self.command, self.server_name))
             
             self._close_socket()
             self.pki.reset()    # sets self.pki.public_key to None

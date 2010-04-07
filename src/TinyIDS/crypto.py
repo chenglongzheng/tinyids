@@ -40,6 +40,12 @@ class PrivateKeyNotLoaded(BaseCryptoError):
 class PublicKeyNotLoaded(BaseCryptoError):
     pass
 
+class InvalidPrivateKey(BaseCryptoError):
+    pass
+
+class InvalidPublicKey(BaseCryptoError):
+    pass
+
 class DataEncryptionError(BaseCryptoError):
     pass
 
@@ -106,11 +112,17 @@ class RSAModule:
     
     def load_external_private_key(self, filename):
         path = os.path.join(self.keys_dir, filename)
-        self.private_key = self._import_key_from_file(path)
+        try:
+            self.private_key = self._import_key_from_file(path)
+        except:
+            raise InvalidPrivateKey
     
     def load_external_public_key(self, filename):
         path = os.path.join(self.keys_dir, filename)
-        self.public_key = self._import_key_from_file(path)
+        try:
+            self.public_key = self._import_key_from_file(path)
+        except:
+            raise InvalidPublicKey
     
     def get_private_key_path(self):
         return '%s.key' % os.path.join(self.keys_dir, self._get_key_basename())
