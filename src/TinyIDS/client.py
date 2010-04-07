@@ -88,6 +88,8 @@ class TinyIDSClient:
         return delay_sec
     
     def _run_backends(self):
+        """Runs all collector backends and passes the yielded information
+        through the hashing algorithm."""
         
         backends_conf_dir = self.cfg.get('main', 'backends_conf_dir')
         
@@ -175,6 +177,7 @@ class TinyIDSClient:
         return enabled_servers
     
     def _send(self, host, port, data):
+        """Sends the command to a TinyIDS server."""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
         logger.info('- Established connection to server: %s' % self.server_name)
@@ -185,6 +188,7 @@ class TinyIDSClient:
         logger.info('- Sent %s command to server: %s' % (self.command, self.server_name))
     
     def _get_server_response(self):
+        """Receives a response from a TinyIDS server."""
         logger.info('- Awaiting server response...')
         response = self.sock.recv(self.max_response_len).strip()
         response = response.rstrip(self.cmd_end)
@@ -194,18 +198,19 @@ class TinyIDSClient:
             logger.info('- PKI: data verified')
         return response.strip()
     
-    def _communicate(self, host, port, data):
-        self._send(host, port, data)
-        response = self._get_server_response()
-        self._check_command_status(response)
-    
     def _check_command_status(self, response):
         if response.startswith('20'):
             logger.info('- RESULT: %s on %s: SUCCESS' % (self.command, self.server_name))
         else:
             logger.warning('- RESULT: %s on %s: FAILURE with error: %s' % (self.command, self.server_name, response))
     
+    def _communicate(self, host, port, data):
+        self._send(host, port, data)
+        response = self._get_server_response()
+        self._check_command_status(response)
+    
     def _get_passphrase(self, msg):
+        """Prompts the user for a passphrase."""
         data = ''
         while not data:
             data = getpass.getpass('%s: ' % msg)
@@ -261,6 +266,7 @@ class TinyIDSClient:
         return self.hasher.hexdigest()
     
     def hash_data(self, data):
+        """Passes data through the hashing algorithm.""" 
         self.hasher.update(data)
         time.sleep(self.default_hashing_delay)
     

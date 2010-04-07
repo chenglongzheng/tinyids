@@ -50,10 +50,23 @@ class InvalidDefaultError(Exception):
 class TinyIDSConfigParser(ConfigParser.RawConfigParser):
 
     def getlist(self, section, option):
+        """Returns a list of strings.
+        
+        Expects a comma-delimited list of strings as the option value.
+        
+        Multiline value is supported.
+        
+        """
         value_list = self.get(section, option)
         return [value.strip() for value in value_list.split(',') if value.strip()]
     
     def get_or_default(self, section, option, default):
+        """Returns the option value.
+        
+        If the option is not set or the value is empty, then it returns the
+        provided default value.
+        
+        """
         if not isinstance(default, str):
             raise InvalidDefaultError
         elif not self.has_option(section, option):
