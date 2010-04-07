@@ -38,6 +38,13 @@ group = tinyids
 logfile = /var/log/tinyidsd.log
 loglevel = debug
 
+# Debug protocol. If this option is enabled and tinyidsd is launched with
+# the --debug switch or the logfile level is set to 'debug', all communication
+# with the clients be printed to STDERR or to the logfile respectively. Note
+# that using this option all sensitive information, like passphrases, is
+# printed without any encryption.
+debug_protocol = 0
+
 # Security related options
 #
 # If 'use_keys' is enabled, then the server client communication

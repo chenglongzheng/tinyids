@@ -65,6 +65,9 @@ class TinyIDSServer(SocketServer.ThreadingTCPServer):
         # Server Configuration
         self.cfg = config.get_server_configuration()
         
+        # Debug protocol
+        self.debug_protocol = self.cfg.getboolean('main', 'debug_protocol')
+        
         # Hash Database
         db_path = self.cfg.get_or_default('main', 'db_path', config.DEFAULT_DATABASE_PATH)
         self.db = database.HashDatabase(db_path)
@@ -153,7 +156,7 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
     cmd_end = '\r\n'
         
     def __init__(self, request, client_address, server):
-        
+
         # Indicator of the command that is being processed
         self.doing_command = None
         
@@ -188,6 +191,8 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
             # PKI is enabled
             data = self.server.pki.decrypt(data)
             logger.info('PKI: data decrypted')
+        if self.server.debug_protocol:
+            logger.debug('-> Received from %s: %s' % (self._client(), data))
         return data
     
     def _verify_grammar(self, data):
@@ -266,6 +271,9 @@ class TinyIDSCommandHandler(SocketServer.StreamRequestHandler):
             logger.info('SUCCESS: %s ran %s successfully' % (self._client(), self.doing_command))
         else:
             logger.warning('FAILURE: %s failed with %s: %s' % (self._client(), self.doing_command, msg))
+        
+        if self.server.debug_protocol:
+            logger.debug('-> Sending to %s: %s' % (self._client(), msg))
         
         if sign and self.server.pki is not None:
             # PKI is enabled

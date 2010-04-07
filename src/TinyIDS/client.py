@@ -58,6 +58,9 @@ class TinyIDSClient:
         # Default hashing delay
         self.default_hashing_delay = self._get_hashing_delay()
         
+        # Debug protocol
+        self.debug_protocol = self.cfg.getboolean('main', 'debug_protocol')
+        
         # PKI Module
         _keys_dir = self.cfg.get('main', 'keys_dir')
         self.pki = crypto.RSAModule(_keys_dir)
@@ -181,6 +184,8 @@ class TinyIDSClient:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
         logger.info('- Established connection to server: %s' % self.server_name)
+        if self.debug_protocol:
+            logger.debug('-> Sending command: %s' % data)
         if self.pki.public_key is not None:
             data = self.pki.encrypt(data)
             logger.info('- PKI: data encrypted')
@@ -196,6 +201,8 @@ class TinyIDSClient:
         if self.pki.public_key is not None:
             response = self.pki.verify(response)
             logger.info('- PKI: data verified')
+        if self.debug_protocol:
+            logger.debug('-> Received response: %s' % response.strip())
         return response.strip()
     
     def _check_command_status(self, response):

@@ -37,6 +37,12 @@ tests =
 # the disk I/O operations per second.
 hashing_delay = 10
 
+# Debug protocol. If this option is enabled and tinyids is launched with
+# the --debug switch, all communication with tinyidsd will be printed
+# to STDERR. Note that using this option all sensitive information, like
+# passphrases, is printed without any encryption.
+debug_protocol = 0
+
 #
 # Remote Servers Section
 #
