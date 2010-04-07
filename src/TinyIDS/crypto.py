@@ -40,6 +40,12 @@ class PrivateKeyNotLoaded(BaseCryptoError):
 class PublicKeyNotLoaded(BaseCryptoError):
     pass
 
+class InvalidPrivateKey(BaseCryptoError):
+    pass
+
+class InvalidPublicKey(BaseCryptoError):
+    pass
+
 class DataEncryptionError(BaseCryptoError):
     pass
 
@@ -106,11 +112,17 @@ class RSAModule:
     
     def load_external_private_key(self, filename):
         path = os.path.join(self.keys_dir, filename)
-        self.private_key = self._import_key_from_file(path)
+        try:
+            self.private_key = self._import_key_from_file(path)
+        except:
+            raise InvalidPrivateKey
     
     def load_external_public_key(self, filename):
         path = os.path.join(self.keys_dir, filename)
-        self.public_key = self._import_key_from_file(path)
+        try:
+            self.public_key = self._import_key_from_file(path)
+        except:
+            raise InvalidPublicKey
     
     def get_private_key_path(self):
         return '%s.key' % os.path.join(self.keys_dir, self._get_key_basename())
@@ -123,6 +135,16 @@ class RSAModule:
         self.private_key = None
     
     def encrypt(self, data_raw):
+        """Encrypts the provided data using self.public_key.
+        
+        Use one of load_public_key() or load_external_public_key() methods
+        in order to load a public key to the PKI module.
+        
+        If a public key has not been loaded, raises PublicKeyNotLoaded.
+        
+        On any error regarding data encryption, raises DataEncryptionError.
+        
+        """
         if self.public_key is None:
             raise PublicKeyNotLoaded
         try:
@@ -134,6 +156,16 @@ class RSAModule:
             return data_enc_b64
     
     def decrypt(self, data_enc_b64):
+        """Decrypts the provided data using self.private_key.
+        
+        Use one of load_private_key() or load_external_private_key() methods
+        in order to load a private key to the PKI module.
+        
+        If a private key has not been loaded, raises PrivateKeyNotLoaded.
+        
+        On any error regarding data decryption, raises DataDecryptionError.
+        
+        """
         if self.private_key is None:
             raise PrivateKeyNotLoaded
         try:
@@ -145,6 +177,16 @@ class RSAModule:
             return data_raw
     
     def verify(self, data_signed_b64):
+        """Verifies the provided data using self.public_key.
+        
+        Use one of load_public_key() or load_external_public_key() methods
+        in order to load a public key to the PKI module.
+        
+        If a public key has not been loaded, raises PublicKeyNotLoaded.
+        
+        On any error regarding data verification, raises DataVerificationError.
+        
+        """
         if self.public_key is None:
             raise PublicKeyNotLoaded
         try:
@@ -156,6 +198,16 @@ class RSAModule:
             return data_raw
     
     def sign(self, data_raw):
+        """Signs the provided data using self.private_key.
+        
+        Use one of load_private_key() or load_external_private_key() methods
+        in order to load a private key to the PKI module.
+        
+        If a private key has not been loaded, raises PrivateKeyNotLoaded.
+        
+        On any error regarding data signing, raises DataSigningError.
+        
+        """
         if self.private_key is None:
             raise PrivateKeyNotLoaded
         try:
@@ -165,7 +217,4 @@ class RSAModule:
             raise DataSigningError
         else:
             return data_signed_b64
-    
-    
-    
-    
+

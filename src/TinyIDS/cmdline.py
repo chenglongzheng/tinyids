@@ -87,7 +87,7 @@ searched at the default location. [Default: %s]""" % (DEFAULT_CLIENT_CONFIG))
     
     parser.add_option('--check', action='store_true', dest='check',
         help="""Checks the calculated hash with the one that is stored at the \
-        remote servers.""")
+remote servers.""")
     
     parser.add_option('--update', action='store_true', dest='update',
         help="""Updates the hash at the remote servers with the calculated one. \
