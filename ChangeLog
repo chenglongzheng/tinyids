@@ -2,6 +2,18 @@ TinyIDS Changelog
 ------------------------------------------------------------------------
 
 
+0.1.2 -> 0.1.3
+
+Released on Wed, Apr 7 2010
+Yet another alpha release
+
+* Bug #163: Client - Unhandled exception if a server's public key does not exist on the filesystem
+* Feature #157: Write documentation about the backend API
+* Feature #235: Add version information to the TinyIDS package
+* Feature #236: The BaseCollector class should include method that executes system commands
+* Feature #237: Code clean-up
+
+
 0.1.1 -> 0.1.2
 
 Released on Tue, Apr 6 2010
