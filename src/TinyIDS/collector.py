@@ -48,8 +48,9 @@ logger = logging.getLogger()
 
 
 class BaseCollector:
-    """
-    TODO: write BaseCollector docstring
+    """Base class for data collector backends.
+    
+    
     """
     
     def __init__(self, config_path=None):
