@@ -23,7 +23,7 @@
 #  limitations under the License.
 #
 
-version = '0.1.2'
+version = '0.1.3'
 status = 'alpha'
 name = 'tinyids'
 description = """TinyIDS is a distributed Intrusion Detection System (IDS) for Unix systems."""
