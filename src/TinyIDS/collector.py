@@ -76,10 +76,10 @@ class BaseCollector:
     
     Instance Methods
     
-    * file_paths(): a file path generator
-    * external_command(): executes a system command
+    * file_paths(): a file path generator (helper method)
+    * external_command(): executes a system command (helper method)
     * collect(): information generator. Should iterate over pieces of collected
-      information.
+      information. (mandatory method)
      
     """
     
@@ -146,6 +146,8 @@ class BaseCollector:
     
     def collect(self):
         """Information generator.
+        
+        All backends should implement a collect() generator.
         
         The yielded information will finally pass through a hashing algorithm.
         
