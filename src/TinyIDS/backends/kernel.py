@@ -32,7 +32,7 @@ class CollectorBackend(BaseCollector):
     
     def collect(self):
         commands = [
-            ['sysctl', '-a'],
+            #['sysctl', '-a'],
             ['lsmod'],
         ]
         for args in commands:
