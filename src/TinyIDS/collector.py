@@ -45,7 +45,13 @@ import subprocess
 from TinyIDS.config import TinyIDSConfigParser
 
 
-class ExternalCommandError(Exception):
+class BaseBackendError(Exception):
+    pass
+
+class InternalBackendError(BaseBackendError):
+    pass
+
+class ExternalCommandError(BaseBackendError):
     pass
 
 
