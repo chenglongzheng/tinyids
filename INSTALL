@@ -1,10 +1,62 @@
 TinyIDS Installation Instructions
 ------------------------------------------------------------------------
 
-To install TinyIDS run:
+Requirements
+------------
+In order to run TinyIDS you will need:
 
-  python setup.py install
+ - Python (http://python.org/)
 
+
+Installation
+------------
+TinyIDS can be installed either directly from source code or from a package,
+for instance an RPM or DEB package, that has been specifically prepared for
+your operating system.
+
+The following procedure describes how to install the TinyIDS release from
+source code on a POSIX-compatible operating system.
+
+* Download and extract the source-code distribution package of TinyIDS:
+
+  wget http://www.codetrax.org/attachments/download/XX/tinyids-X.X.X.tar.gz
+  tar -xzvf tinyids-X.X.X.tar.gz
+  cd tinyids-X.X.X
+
+* Run the installer:
+
+  python setup.py install -f
+
+TinyIDS is now installed on your system.
+
+* Prepare the system to run a TinyIDS Server
+
+Before running a TinyIDS server, it is necessary to accomplish some extra
+system administration tasks:
+
+1. Create a user to run tinyidsd
+
+It is highly recommended that you create an unprivileged system user which will
+be used to run the server process.
+
+  groupadd -r tinyids
+  useradd -r -g tinyids tinyids
+
+2. Set filesystem permissions
+
+The TinyIDS server stores the client information in a database. The default
+location, where this database is stored is /var/lib/tinyids/tinyids.db
+This means that the tinyidsd server process needs to have write permission
+to the /var/lib/tinyids/ directory. Proper permissions can be set by invoking
+the following commands:
+
+  chmod 0750 /var/lib/tinyids
+  chown tinyids /var/lib/tinyids
+  chgrp tinyids /var/lib/tinyids
+
+
+Appendix I - Installing to a custom location
+--------------------------------------------
 For installation to a custom location you can use something like the following:
 
   python setup.py install --prefix=/usr --root=/tmp
@@ -13,7 +65,11 @@ For more information about the 'install' command, study the help message:
 
   python setup.py --help install
 
+
+Appendix II - Creating an RPM package
+-------------------------------------
 To create an RPM package:
 
   python setup.py bdist_rpm --release 1
+
 
