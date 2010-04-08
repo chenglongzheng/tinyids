@@ -29,7 +29,6 @@ keys_dir = /etc/tinyids/keys/
 
 # You can set which tests are run by providing a comma-delimited list
 # of tests. If a list is not provided, all valid tests run.
-#Default test names are: binhash
 tests =
 
 # Hashing delay. This is the time in milliseconds tinyids should wait between
