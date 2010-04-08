@@ -92,7 +92,7 @@ class TinyIDSClient:
     
     def _get_hashing_delay(self):
         """Returns the hashing delay in seconds."""
-        delay_msec = self.default_hashing_delay = self.cfg.getfloat('main', 'hashing_delay')
+        delay_msec = self.cfg.getfloat('main', 'hashing_delay')
         delay_sec = delay_msec / 1000
         logger.debug('Hashing delay set to %.3f seconds' % delay_sec)
         return delay_sec
