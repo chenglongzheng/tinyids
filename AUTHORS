@@ -1,5 +1,15 @@
 TinyIDS Authors and Contributors
 --------------------------------
-TinyIDS is the result of the hard work of the following individuals:
+TinyIDS is the result of the hard work of the following individuals.
 
-George Notaras <gnot@g-loaded.eu>, CodeTRAX.org -- Founder
+The author entries follow the format:
+
+  {full_name} ({commiter_name}), <{email}> -- {special_roles}  
+
+
+Core Development Team
+---------------------
+George Notaras (gnotaras), <gnot@g-loaded.eu> -- Founder
+
+Respected Contributors
+----------------------
