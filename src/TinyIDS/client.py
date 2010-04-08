@@ -51,9 +51,16 @@ class TinyIDSClient:
     
     def __init__(self, command):
         
-        self.command = command  # TEST | CHECK | UPDATE | DELETE | CHANGEPHRASE
-        self.hasher = sha1()
+        # Client configuration (config.TinyIDSConfigParser instance)
         self.cfg = config.get_client_configuration()
+        
+        # Data hashing object
+        self.hasher = sha1()
+        # Immediately hash the machine's hostname (issue: #248)
+        self.hash_data(socket.gethostname())
+        
+        # Holds the current command
+        self.command = command  # TEST | CHECK | UPDATE | DELETE | CHANGEPHRASE
         
         # Default hashing delay
         self.default_hashing_delay = self._get_hashing_delay()
