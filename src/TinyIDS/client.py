@@ -309,7 +309,7 @@ class TinyIDSClient:
                 self.client_close()
                 return
             else:
-                logger.info('Hashing complete')
+                logger.info('Data hashing complete')
         
         # Execute command on server
         logger.info('Preparing to contact servers')
