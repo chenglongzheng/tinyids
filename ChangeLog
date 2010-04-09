@@ -2,10 +2,21 @@ TinyIDS Changelog
 ------------------------------------------------------------------------
 
 
-0.1.2 -> 0.1.3
+0.1.3 -> 0.1.4
+First public alpha release
+Released on Fri, Apr 9 2010
 
+* Bug #247: Improve the project description
+* Bug #248: The hashing algorithm should always hash the machine's hostname
+* Feature #143: Make first public alpha release
+* Feature #226: Protocol improvement with the addition of protocol version to TEST command
+* Feature #233: Debug mode should show the client-server communication
+* Feature #240: New backend: collect the outputs of several networking related commands
+* Feature #241: New backend: collect the kernel configuration
+
+
+0.1.2 -> 0.1.3
 Released on Wed, Apr 7 2010
-Yet another alpha release
 
 * Bug #163: Client - Unhandled exception if a server's public key does not exist on the filesystem
 * Feature #157: Write documentation about the backend API
@@ -15,9 +26,7 @@ Yet another alpha release
 
 
 0.1.1 -> 0.1.2
-
 Released on Tue, Apr 6 2010
-Status is alpha again due to the many new features
 
 * Bug #230: The client's message about the result of the command should be more consistent
 * Bug #231: Still contacts servers even if no backends have run
@@ -30,9 +39,7 @@ Status is alpha again due to the many new features
 
 
 0.1.0 -> 0.1.1
-
 Released on Fri, Apr 2 2010
-First beta release
 
 * Bug #147: Logger messages need improvement
 * Bug #179: Client should notify about connection
@@ -41,9 +48,7 @@ First beta release
 
 
 0.0.0 -> 0.1.0
-
 Released on Thu, Apr 1 2010
-Initial public alpha release
 
 * Bug #146: Refactor the hash database code
 * Bug #149: Refactor crypto related code in server and client to improve readability
@@ -57,7 +62,6 @@ Initial public alpha release
 * Bug #172: Consider renaming the key_bits option to key_length
 * Bug #174: Do not drop privileges if user is not set in the server config
 * Feature #142: Implement client-server communication using PKI
-* Feature #143: Make first public alpha release
 * Feature #144: Add a test keypair
 * Feature #145: Run as a background process
 * Feature #148: Fill project information in the info module
