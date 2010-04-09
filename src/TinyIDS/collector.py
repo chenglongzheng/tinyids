@@ -23,24 +23,12 @@
 #  limitations under the License.
 #
 
-DEFAULT_GLOB_EXP = (
-    '/usr/local/sbin/*',
-    '/usr/local/bin/*',
-    '/sbin/*',
-    '/bin/*',
-    '/usr/sbin/*',
-    '/usr/bin/*',
-    '/root/bin/*',
-    '/lib/*',
-    '/usr/lib/*',
-    '/usr/local/lib/*',
-)
-
-
 import os
 import glob
 import logging
 import subprocess
+import shlex
+import ConfigParser
 
 from TinyIDS.config import TinyIDSConfigParser
 
@@ -49,6 +37,9 @@ class BaseBackendError(Exception):
     pass
 
 class InternalBackendError(BaseBackendError):
+    pass
+
+class BackendConfigurationError(BaseBackendError):
     pass
 
 class ExternalCommandError(BaseBackendError):
@@ -60,34 +51,35 @@ class BaseCollector:
     
     In TinyIDS terminology a 'collector backend' is a module that collects
     information from files or from the output of system commands and provides
-    it to a hashing algorithm, so that a unique checksum is calculated for
-    the specific piece of information.
+    it to the client.
     
     Backend Configuration
     
-    Each collector backend may have its own optional configuration file. A
-    very basic configuration file is shown below:
+    Each collector backend may have its own optional configuration file.
+    By convention, the basename of the backend configuration file is:
     
-    [main]
-    paths = 
-        /usr/local/bin/*,
-        /usr/local/lib/*,
+      <backend_name>.conf
     
-    The 'paths' option accepts a comma-delimited list of glob expressions.
-    This option is used by the file_paths() generator.
+    Each backend configuration file may have any option the developer
+    sees fit.  
     
-    Each backend configuration file may have any other option the developer
-    sees fit. Even the 'paths' option is optional and the backend developer
-    may uses other means to retrieve a list of file paths.  
+    Instance Helper Methods
     
-    Instance Methods
+    The following methods can be used by backends in order to avoid
+    duplicating work between different backends. 
     
     * file_paths(): a file path generator (helper method)
+    * command_args(): a command generator (helper method)
     * external_command(): executes a system command (helper method)
-    * collect(): information generator. Should iterate over pieces of collected
-      information. (mandatory method)
-     
+    
+    Instance Mandatory Methods
+    
+    * collect(): information generator. Should iterate over pieces of
+                 collected information.
+    
     """
+    
+    name = 'OVERRIDE'
     
     def __init__(self, config_path=None):
         """Constructor.
@@ -107,31 +99,75 @@ class BaseCollector:
         if config_path:
             if os.path.exists(config_path):
                 self.cfg.read(config_path)
-                self.logger.debug('Using configuration for %s backend from: %s' % (__name__, config_path))
+                self.logger.debug('%s: Using configuration from: %s' % (self.name, config_path))
         
-    def file_paths(self):
+    def file_paths(self, default_glob_exp):
         """File path generator.
         
-          1. Retrieves the glob expressions from the configuration file (option
-             'paths' under the [main] section). If a configuration file is not
-             found or if the option is not set, then the internal default glob
-             expressions (DEFAULT_GLOB_EXP) are used.
-          2. Expands each glob expression.
-          3. Iterates over the list of paths, which are the result of the
-             glob expression expansion. 
+        Accepts the 'default_glob_exp' list. This list should contain a
+        list of glob expressions as strings.
+        
+        Optional configuration file.
+        
+        [main]
+        paths = glob1, glob2, ...
+        
+        The file_paths() generator:
+        
+          1. tries to retrieve the glob expressions from the configuration
+             file (option 'paths' under the [main] section).
+          2. If this is not possible, then it uses the default_glob_exp list.
+          3. Processes the glob expressions and yields each path to file:
+            a. Expands each glob expression into a list of paths.
+            b. Iterates over the list of paths and returns them one by one. 
         
         """
-        if not self.cfg.has_section('main'):
-            paths = DEFAULT_GLOB_EXP
-        elif not self.cfg.has_option('main', 'paths'):
-            paths = DEFAULT_GLOB_EXP
-        else:
+        paths = default_glob_exp
+        try:
             paths = self.cfg.getlist('main', 'paths')
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            self.logger.debug('%s: Scanning internal default paths' % self.name)
+        else:
+            self.logger.debug('%s: Scanning user-defined paths' % self.name)
         for path in paths:
             file_list = glob.glob(path)
             for fpath in file_list:
                 if os.path.isfile(fpath):   # Follows symbolic links
                     yield fpath
+    
+    def command_args(self, default_commands):
+        """Command generator.
+        
+        Each command is returned as a list of arguments.
+        
+        Accepts the 'default_commands' list. This list should contain a
+        list of commands as strings.
+        
+        Optional configuration file.
+        
+        [main]
+        commands = com1, com2, ...
+        
+        The command_args() generator:
+        
+          1. tries to retrieve a list of commands from the configuration file.
+          2. If this is not possible, it uses the default_commands list.
+        
+        Iterates over the list of commands and returns each command as a
+        list of command line arguments.
+
+        """
+        commands = default_commands
+        try:
+            commands = self.cfg.getlist('main', 'commands')
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            if not default_commands:
+                raise InternalBackendError('No commands to execute')
+            self.logger.debug('%s: Executing internal default commands' % self.name)
+        else:
+            self.logger.debug('%s: Executing user-defined commands' % self.name)
+        for command in commands:
+            yield shlex.split(command)
     
     def external_command(self, args):
         """Executes an external command.
