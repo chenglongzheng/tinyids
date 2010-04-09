@@ -1,6 +1,12 @@
 TinyIDS Changelog
 ------------------------------------------------------------------------
 
+0.1.5 -> 0.1.6
+Released on Fri, Apr 9 2010
+
+* Bug #260: Inconsistent internal backend defaults with the default backend configuration files
+
+
 0.1.4 -> 0.1.5
 Released on Fri, Apr 9 2010
 
