@@ -45,6 +45,8 @@
 
 
 import sys
+import glob
+
 sys.path = ['src/'] + sys.path
 
 from distutils.core import setup
@@ -80,7 +82,9 @@ if __name__=='__main__':
             #    'contrib/tinyids.cron',
             #]),
             #('/etc/tinyids/backends', []),
-            ('/etc/tinyids/backends.conf.d', []),
+            ('/etc/tinyids/backends.conf.d',
+                glob.glob('etc/backends.conf.d/*.conf.default')
+            ),
             ('/etc/tinyids/keys', []),
             ('/var/lib/tinyids', []),
         ],
