@@ -24,19 +24,24 @@
 #
 
 import sys
+import shlex
 
 from TinyIDS.collector import BaseCollector
 
 
+DEFAULT_COMMANDS = [
+    'netstat -ltn',
+    'iptables --list',
+    #['ifconfig'],
+]
+
+
 class CollectorBackend(BaseCollector):
     
+    name = __name__
+    
     def collect(self):
-        commands = [
-            ['netstat', '-ltn'],
-            ['iptables', '--list'],
-            #['ifconfig'],
-        ]
-        for args in commands:
+        for args in self.command_args(DEFAULT_COMMANDS):
             stdout = self.external_command(args)
             yield '%s\n' % stdout
 

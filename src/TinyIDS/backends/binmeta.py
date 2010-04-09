@@ -29,10 +29,26 @@ import os
 from TinyIDS.collector import BaseCollector
 
 
+DEFAULT_GLOB_EXP = (
+    '/usr/local/sbin/*',
+    '/usr/local/bin/*',
+    '/sbin/*',
+    '/bin/*',
+    '/usr/sbin/*',
+    '/usr/bin/*',
+    '/root/bin/*',
+    '/lib/*',
+    '/usr/lib/*',
+    '/usr/local/lib/*',
+)
+
+
 class CollectorBackend(BaseCollector):
     
+    name = __name__
+    
     def collect(self):
-        for path in self.file_paths():
+        for path in self.file_paths(DEFAULT_GLOB_EXP):
             #print 'checking: %s' % path
             fst = os.stat(path)
             data = '%s %s %s %s %s %s %s\n' % (path, fst.st_mode, fst.st_ino, fst.st_uid, fst.st_gid, fst.st_size, fst.st_mtime)

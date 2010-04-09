@@ -28,16 +28,20 @@ import sys
 from TinyIDS.collector import BaseCollector
 
 
+DEFAULT_COMMANDS = [
+    #'sysctl', '-a',
+    'lsmod',
+]
+
+
 class CollectorBackend(BaseCollector):
     
+    name = __name__
+    
     def collect(self):
-        commands = [
-            #['sysctl', '-a'],
-            ['lsmod'],
-        ]
-        for args in commands:
+        for args in self.command_args(DEFAULT_COMMANDS):
             stdout = self.external_command(args)
-            yield '%s\n\n' % stdout
+            yield '%s\n' % stdout
 
 if __name__ == '__main__':
     for data in CollectorBackend().collect():
