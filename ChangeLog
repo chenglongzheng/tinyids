@@ -1,6 +1,14 @@
 TinyIDS Changelog
 ------------------------------------------------------------------------
 
+0.1.4 -> 0.1.5
+Released on Fri, Apr 9 2010
+
+* Bug #251: Exception when running the client through cron.
+* Bug #255: The default backend configurations are not installed
+* Feature #252: Use backend configurations by default
+* Feature #254: Improved collector backend API
+
 
 0.1.3 -> 0.1.4
 First public alpha release
