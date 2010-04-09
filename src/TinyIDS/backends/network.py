@@ -24,15 +24,14 @@
 #
 
 import sys
-import shlex
 
 from TinyIDS.collector import BaseCollector
 
 
 DEFAULT_COMMANDS = [
-    'netstat -ltn',
-    'iptables --list',
-    #['ifconfig'],
+    '/bin/netstat -ltn',
+    '/sbin/iptables --list',
+    #'ifconfig',
 ]
 
 

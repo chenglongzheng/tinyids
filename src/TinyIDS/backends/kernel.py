@@ -29,8 +29,8 @@ from TinyIDS.collector import BaseCollector
 
 
 DEFAULT_COMMANDS = [
-    #'sysctl', '-a',
-    'lsmod',
+    #'/sbin/sysctl -a',
+    '/sbin/lsmod',
 ]
 
 
