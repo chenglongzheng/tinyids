@@ -136,17 +136,18 @@ class TinyIDSClient:
                 logger.warning('Skipping invalid backend: %s' % backend_path)
                 continue
             
+            logger.info('Processing backend: %s' % backend_name)
+            
             backend_config_file = os.path.join(backends_conf_dir, m.__name__ + '.conf')
             b = m.CollectorBackend(config_path=backend_config_file)
             if not hasattr(b, 'collect'):
-                logger.warning('Skipping invalid backend: %s' % backend_path)
+                logger.error('Invalid TinyIDS backend: %s' % backend_path)
                 continue
             
-            # Run backend
-            logger.info('Processing backend: %s' % backend_name)
+            # Collect information
             for data in b.collect():
                 self.hash_data(data)
-            logger.info('- Complete')
+            logger.info('%s: Complete' % backend_name)
             
             if user_defined_backend_list:
                 # If a user-defined list of backends is used, add the name of
