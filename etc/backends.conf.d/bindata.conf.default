@@ -3,7 +3,12 @@
 #
 
 [main]
-recursive = 1
+# Descend into subdirectories (not implemented)
+#recursive = 1
+
+# paths - Accepts a comma-delimited list of glob expressions. Each expression
+# is expanded internally to file paths. Each file's content is passed through
+# the hashing algorithm.
 paths = 
 	/usr/local/sbin/*,
     /usr/local/bin/*,

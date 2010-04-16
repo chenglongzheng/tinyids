@@ -1,8 +1,11 @@
 #
-# Configuration file for the network backend of the TinyIDS client.
+# Configuration file for the 'network' backend of the TinyIDS client.
 #
 
 [main]
+# commands - Accepts a comma-delimited list of system commands to be executed.
+# The output will be passed through the hashing algorithm. Make sure the
+# commands you run produce consistent output in two consecutive runs.
 commands = 
 	/bin/netstat -ltn,
     /sbin/iptables --list
