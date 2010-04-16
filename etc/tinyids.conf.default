@@ -34,7 +34,7 @@ tests =
 # Hashing delay. This is the time in milliseconds tinyids should wait between
 # two consequent hashing operations. This feature exists in order to reduce
 # the disk I/O operations per second.
-hashing_delay = 10
+hashing_delay = 100
 
 # Debug protocol. If this option is enabled and tinyids is launched with
 # the --debug switch, all communication with tinyidsd will be printed
