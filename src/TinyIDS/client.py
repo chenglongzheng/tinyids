@@ -65,7 +65,8 @@ class TinyIDSClient:
  
         # Data hashing object
         self.hasher = sha1()
-        # Immediately hash the machine's hostname (issue: #248)
+        # Immediately hash the machine's hostname to avoid possible
+        # identical hashes among identical machines (issue: #248)
         self.hash_data(socket.gethostname())
         
         # PKI Module
