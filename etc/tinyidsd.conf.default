@@ -34,8 +34,13 @@ port = 10500
 user = tinyids
 group = tinyids
 
+# Options that deal with log messages.
+
 # Logfile path
 logfile = /var/log/tinyidsd.log
+
+# Log level can be one of: debug, info, warning, error, critical
+# 'debug' produces the most verbose output.
 loglevel = debug
 
 # Debug protocol. If this option is enabled and tinyidsd is launched with
