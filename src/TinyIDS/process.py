@@ -124,7 +124,7 @@ def run_as_user(user, group):
         raise UserError('User not found: %s' % user)
 
 
-def chown_chmod_path(path, user, group, mode):
+def set_fs_permissions(path, user, group, mode):
     """Sets permissions and ownership on path.
     
     This can only work only if the process has been started with root
@@ -137,5 +137,6 @@ def chown_chmod_path(path, user, group, mode):
     uid = pwd.getpwnam(user)[2]
     gid = grp.getgrnam(group)[2]
     
-    os.chown(path, uid, gid)
     os.chmod(path, mode)
+    os.chown(path, uid, gid)
+    

@@ -120,7 +120,7 @@ def server_main():
     
         # Set permissions and ownership on the logfile, if running as root
         if user:
-            process.chown_chmod_path(logfile, user, group, 0600)
+            process.set_fs_permissions(logfile, user, group, 0600)
         
         logger.info('tinyidsd normal startup')
         logger.debug('Logging to file: %s' % logfile)
